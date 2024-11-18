@@ -1,0 +1,61 @@
+# https://canonical-subiquity.readthedocs-hosted.com/en/latest/reference/autoinstall-reference.html
+# Todo - Generate hostname
+# Todo - Rework storage
+# Todo - Look at packages and snaps for default installing programs
+# Todo - deb-conf selection
+# Todo - Any error-commands, late-commands, reporting?
+# Todo - user-data vs identity?
+
+#cloud-init
+autoinstall:
+	version: 1
+    early-commands:
+        - while [ ! -f /run/finish-early ]; do sleep 1; done
+
+    locale: "en_US.UTF-8"
+
+    refresh-installer:
+        update: true
+        channel: latest/edge
+    
+    keyboard:
+        layout: se
+    
+    source:
+        search_drivers: true
+        id: ubuntu-desktop
+    
+    storage:
+        layout:
+            name: lvm
+            sizing-policy: all
+            password: Linux4Ever
+    
+    identity:
+        username: loc-adm
+        hostname: UbuClient3
+        password: '$6$824FrOyJfTlKZFEB$ujZV7CZfv3ebjqWkQi8Cv.iZLurACC7hLF26OvEBdP7MYcnno7TU/snZPZvUdmbkUBc1uC2qLS/bXrm3164W01'
+        
+    active-directory:
+        admin-name: Administrator
+        domain-name: labb.se
+        
+    ubuntu-pro:
+        token: C1rvwkaFo1C6kkimncyREbF2j9Ceu
+        
+    ssh:
+        install-server: true
+        authorized-keys:
+            - ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIEygdPNRkeFNfQ9P9mS4VjuFRNg5kvsyjV6hzLWdFZSg loc-adm @ labb.se
+        allow-pw: false
+    
+    codecs:
+        install: false
+    drivers:
+        install: true
+    
+    timezone: "Europe/Stockholm"
+    
+    updates: all
+    
+    shutdown: poweroff
