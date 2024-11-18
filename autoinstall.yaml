@@ -19,44 +19,44 @@ autoinstall:
     update: true
     channel: latest/edge
 
-    keyboard:
-      layout: se
+  keyboard:
+    layout: se
 
-    source:
-      search_drivers: true
-      id: ubuntu-desktop
+  source:
+    search_drivers: true
+    id: ubuntu-desktop
 
-    storage:
-      layout:
-        name: lvm
-        sizing-policy: all
-        password: Linux4Ever
+  storage:
+    layout:
+      name: lvm
+      sizing-policy: all
+      password: Linux4Ever
 
-    identity:
-      username: loc-adm
-      hostname: UbuClient3
-      password: "$6$824FrOyJfTlKZFEB$ujZV7CZfv3ebjqWkQi8Cv.iZLurACC7hLF26OvEBdP7MYcnno7TU/snZPZvUdmbkUBc1uC2qLS/bXrm3164W01"
+  identity:
+    username: loc-adm
+    hostname: UbuClient3
+    password: "$6$824FrOyJfTlKZFEB$ujZV7CZfv3ebjqWkQi8Cv.iZLurACC7hLF26OvEBdP7MYcnno7TU/snZPZvUdmbkUBc1uC2qLS/bXrm3164W01"
 
-    active-directory:
-      admin-name: Administrator
-      domain-name: labb.se
+  active-directory:
+    admin-name: Administrator
+    domain-name: labb.se
 
-    ubuntu-pro:
-      token: C1rvwkaFo1C6kkimncyREbF2j9Ceu
+  #ubuntu-pro:
+  #  token: C1rvwkaFo1C6kkimncyREbF2j9Ceu
 
-    ssh:
-      install-server: true
-      authorized-keys:
-        - ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIEygdPNRkeFNfQ9P9mS4VjuFRNg5kvsyjV6hzLWdFZSg loc-adm @ labb.se
-      allow-pw: false
+  ssh:
+    install-server: true
+    authorized-keys:
+      - ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIEygdPNRkeFNfQ9P9mS4VjuFRNg5kvsyjV6hzLWdFZSg loc-adm @ labb.se
+    allow-pw: false
 
-    codecs:
-      install: false
-    drivers:
-      install: true
+  codecs:
+    install: false
+  drivers:
+    install: true
 
-    timezone: "Europe/Stockholm"
+  timezone: "Europe/Stockholm"
 
-    updates: all
+  updates: all
 
-    shutdown: poweroff
+  shutdown: poweroff
