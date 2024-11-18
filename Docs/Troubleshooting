@@ -1,3 +1,4 @@
 Ubuntu 24.04 hangs on AD join (Unresolved):
 <https://bugs.launchpad.net/subiquity/+bug/2069437>
-Fix: Use realmd to AD join after installer.
+
+Fix: Use realmd to AD join after install.
