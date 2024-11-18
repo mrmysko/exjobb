@@ -10,8 +10,8 @@
 autoinstall:
   version: 1
 
-  early-commands:
-    - while [ ! -f /run/finish-early ]; do sleep 1; done
+  #early-commands:
+  #  - while [ ! -f /run/finish-early ]; do sleep 1; done
 
   locale: "en_US.UTF-8"
 
@@ -37,9 +37,9 @@ autoinstall:
     hostname: UbuClient3
     password: "$6$824FrOyJfTlKZFEB$ujZV7CZfv3ebjqWkQi8Cv.iZLurACC7hLF26OvEBdP7MYcnno7TU/snZPZvUdmbkUBc1uC2qLS/bXrm3164W01"
 
-  active-directory:
-    admin-name: Administrator
-    domain-name: labb.se
+  #active-directory:
+  #  admin-name: Administrator
+  #  domain-name: labb.se
 
   #ubuntu-pro:
   #  token: C1rvwkaFo1C6kkimncyREbF2j9Ceu
