@@ -29,6 +29,27 @@ function Create-OUIfNotExists {
     }
 }
 
+function Create-AdminGroup {
+    param(
+        [string]$Name,
+        [string]$Path
+    )
+    
+    try {
+        $groupExists = Get-ADGroup -Filter "Name -eq '$Name'" -SearchBase $Path -SearchScope OneLevel
+        if (-not $groupExists) {
+            New-ADGroup -Name $Name -GroupScope Global -GroupCategory Security -Path $Path
+            Write-Host "Created Group: $Name in $Path"
+        }
+        else {
+            Write-Host "Group already exists: $Name in $Path"
+        }
+    }
+    catch {
+        Write-Error ("Error creating/checking Group {0} in {1} - {2}" -f $Name, $Path, $_)
+    }
+}
+
 try {
     $domainDN = (Get-ADDomain).DistinguishedName
     
@@ -47,6 +68,8 @@ try {
     Create-OUIfNotExists -Name "Windows" -Path $computersPath
     Create-OUIfNotExists -Name "Linux" -Path $computersPath
     
+    Create-AdminGroup -Name "TB_Admin" -Path "OU=Admins,$basePath"
+    
     for ($i = 1; $i -le $NumberOfTiers; $i++) {
         $tierName = "Tier $i"
         Create-OUIfNotExists -Name $tierName -Path $companyPath
@@ -58,6 +81,8 @@ try {
         $serversPath = "OU=Servers,$tierPath"
         Create-OUIfNotExists -Name "Windows" -Path $serversPath
         Create-OUIfNotExists -Name "Linux" -Path $serversPath
+        
+        Create-AdminGroup -Name "T${i}_Admin" -Path "OU=Admins,$tierPath"
     }
     
     Write-Host "`nOU structure creation completed successfully!"
