@@ -20,15 +20,17 @@ if [ "$EUID" -ne 0 ]; then
     exit 1
 fi
 
-msg_info "Setting up client."
+msg_info "Setting up client"
 
-msg_info "Installing realmd."
-apt install -y realmd
+msg_info "Installing dependencies"
+apt update && apt install -y realmd sssd sssd-tools libnss-sss adcli
 
 msg_info "Joining domain."
 realm join -U "${domain_user}" "${domain}"
 
-# Fix sssd conf, fallback home and fqdn
+msg_info "Change sssd conf"
+sed -i 's/fallback_homedir = .*/fallback_homedir = \/home\/%u/' /etc/sssd/sssd.conf
+sed -i 's/use_fully_qualified_names = .*/use_fully_qualified_names = False/' /etc/sssd/sssd.conf
 
 msg_info "Changing login permissions"
 realm deny --all
@@ -42,7 +44,7 @@ msg_info "Giving sudo for admins"
 SUDOERS_TEMP=$(mktemp)
 
 echo "%$(escape_spaces "${permit_admin}") ALL=(ALL) ALL" >"$SUDOERS_TEMP"
-visudo -f "$SUDOERS_TEMP" && cp "$SUDOERS_TEMP" /etc/sudoers.d/custom_admins
+EDITOR=cat visudo -f "$SUDOERS_TEMP" && cp "$SUDOERS_TEMP" /etc/sudoers.d/custom_admins
 rm "$SUDOERS_TEMP"
 
 #reboot
