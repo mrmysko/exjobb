@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+# Usage: sudo bash -c "${wget -qLO - https://raw.githubusercontent.com/mrmysko/exjobb/refs/heads/main/domainSetup.sh}"
+
 client=True
 domain_user="Administrator"
 domain="Labb.se"
