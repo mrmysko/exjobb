@@ -31,6 +31,10 @@ realm join -U "${domain_user}" "${domain}"
 msg_info "Change sssd conf"
 sed -i 's/fallback_homedir = .*/fallback_homedir = \/home\/%u/' /etc/sssd/sssd.conf
 sed -i 's/use_fully_qualified_names = .*/use_fully_qualified_names = False/' /etc/sssd/sssd.conf
+systemctl restart sssd
+
+msg_info "Enable pam_mkhomedir"
+pam-auth-update --enable mkhomedir
 
 msg_info "Changing login permissions"
 realm deny --all
@@ -44,7 +48,6 @@ msg_info "Giving sudo for admins"
 SUDOERS_TEMP=$(mktemp)
 
 echo "%$(escape_spaces "${permit_admin}") ALL=(ALL) ALL" >"$SUDOERS_TEMP"
-EDITOR=cat visudo -f "$SUDOERS_TEMP" && cp "$SUDOERS_TEMP" /etc/sudoers.d/custom_admins
-rm "$SUDOERS_TEMP"
+visudo --check --quiet "$SUDOERS_TEMP" && mv "$SUDOERS_TEMP" /etc/sudoers.d/custom_admins
 
 #reboot
