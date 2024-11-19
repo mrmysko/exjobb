@@ -6,10 +6,19 @@ domain="Labb.se"
 permit_group="Domain Users"
 permit_admin="Domain Admins"
 
+msg_info() {
+    echo "[INFO] $1"
+}
+
 escape_spaces() {
     local text="$1"
     echo "${text// /\\ }"
 }
+
+if [ "$EUID" -ne 0 ]; then
+    echo "Root required"
+    exit 1
+fi
 
 msg_info "Setting up client."
 
@@ -36,4 +45,4 @@ echo "%$(escape_spaces "${permit_admin}") ALL=(ALL) ALL" >"$SUDOERS_TEMP"
 visudo -f "$SUDOERS_TEMP" && cp "$SUDOERS_TEMP" /etc/sudoers.d/custom_admins
 rm "$SUDOERS_TEMP"
 
-reboot
+#reboot
