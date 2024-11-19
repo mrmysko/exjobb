@@ -46,8 +46,9 @@ fi
 
 msg_info "Giving sudo for admins"
 SUDOERS_TEMP=$(mktemp)
-
 echo "%$(escape_spaces "${permit_admin}") ALL=(ALL) ALL" >"$SUDOERS_TEMP"
-visudo --check --quiet "$SUDOERS_TEMP" && mv "$SUDOERS_TEMP" /etc/sudoers.d/custom_admins
+visudo --check --quiet "$SUDOERS_TEMP" && mv "$SUDOERS_TEMP" /etc/sudoers.d/${domain}
 
-#reboot
+msg_info "Rebooting in 5 seconds..."
+sleep 5
+reboot
