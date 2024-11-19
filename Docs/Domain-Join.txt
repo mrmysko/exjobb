@@ -1,0 +1,15 @@
+1. Install ubuntu
+
+2. Set dns server to DC
+
+3. Set hostname and hosts to <hostname>.<domain>
+
+4. Install realmd
+
+5. realm join -U <AD user> <domain>
+
+6. realm deny --all :(Deny local login from all AD accounts)
+
+7. realm permit -g <group> :(Permit local login of <group>)
+
+8. visudo -> %<group> ALL=(ALL) ALL :(Grant sudo permissions to users of <group>) 
