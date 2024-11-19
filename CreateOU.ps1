@@ -1,5 +1,3 @@
-# Create a basic OU structure.
-
 param(
     [Parameter(Mandatory = $true)]
     [string]$CompanyName,
@@ -40,10 +38,14 @@ try {
     Create-OUIfNotExists -Name "Tier Base" -Path $companyPath
     $basePath = "OU=Tier Base,$companyPath"
     
-    Create-OUIfNotExists -Name "Clients" -Path $basePath
     Create-OUIfNotExists -Name "Users" -Path $basePath
     Create-OUIfNotExists -Name "Admins" -Path $basePath
     Create-OUIfNotExists -Name "Groups" -Path $basePath
+    Create-OUIfNotExists -Name "Computers" -Path $basePath
+
+    $computersPath = "OU=Computers,$basePath"
+    Create-OUIfNotExists -Name "Windows" -Path $computersPath
+    Create-OUIfNotExists -Name "Linux" -Path $computersPath
     
     for ($i = 1; $i -le $NumberOfTiers; $i++) {
         $tierName = "Tier $i"
@@ -52,6 +54,10 @@ try {
         
         Create-OUIfNotExists -Name "Servers" -Path $tierPath
         Create-OUIfNotExists -Name "Admins" -Path $tierPath
+
+        $serversPath = "OU=Servers,$tierPath"
+        Create-OUIfNotExists -Name "Windows" -Path $serversPath
+        Create-OUIfNotExists -Name "Linux" -Path $serversPath
     }
     
     Write-Host "`nOU structure creation completed successfully!"
