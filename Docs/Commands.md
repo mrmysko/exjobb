@@ -7,3 +7,4 @@
 |Query entries from databases configured in nsswitch.conf|```getent <entry> <object>```|
 
 adcli - Perform actions in Active Directory
+wbinfo - Winbind query tool.
