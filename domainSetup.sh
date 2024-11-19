@@ -46,7 +46,7 @@ if [[ ${client} ]]; then
     realm permit -g "${permit_group}"
 fi
 
-msg_info "Giving sudo for admins"
+msg_info "Giving sudo to admins"
 SUDOERS_TEMP=$(mktemp)
 echo "%$(escape_spaces "${permit_admin}") ALL=(ALL) ALL" >"$SUDOERS_TEMP"
 visudo --check --quiet "$SUDOERS_TEMP" && mv "$SUDOERS_TEMP" /etc/sudoers.d/${domain}

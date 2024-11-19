@@ -68,9 +68,14 @@ try {
     Create-OUIfNotExists -Name "Windows" -Path $computersPath
     Create-OUIfNotExists -Name "Linux" -Path $computersPath
     
-    Create-AdminGroup -Name "TB_Admin" -Path "OU=Admins,$basePath"
+    Create-AdminGroup -Name "TB_Admins" -Path "OU=Admins,$basePath"
+
+    # Add Windows and Linux Admin sub-OUs in Tier Base Admins
+    $tierBaseAdminsPath = "OU=Admins,$basePath"
+    Create-OUIfNotExists -Name "Windows Admins" -Path $tierBaseAdminsPath
+    Create-OUIfNotExists -Name "Linux Admins" -Path $tierBaseAdminsPath
     
-    for ($i = 1; $i -le $NumberOfTiers; $i++) {
+    for ($i = 0; $i -lt $NumberOfTiers; $i++) {
         $tierName = "Tier $i"
         Create-OUIfNotExists -Name $tierName -Path $companyPath
         $tierPath = "OU=$tierName,$companyPath"
@@ -81,8 +86,14 @@ try {
         $serversPath = "OU=Servers,$tierPath"
         Create-OUIfNotExists -Name "Windows" -Path $serversPath
         Create-OUIfNotExists -Name "Linux" -Path $serversPath
+
+        $adminsPath = "OU=Admins,$tierPath"
+        Create-OUIfNotExists -Name "Windows Admins" -Path $adminsPath
+        Create-OUIfNotExists -Name "Linux Admins" -Path $adminsPath
         
-        Create-AdminGroup -Name "T${i}_Admin" -Path "OU=Admins,$tierPath"
+        # Create security groups in sub-admin OUs
+        Create-AdminGroup -Name "T${i}_Windows_Admins" -Path "OU=Windows Admins,$adminsPath"
+        Create-AdminGroup -Name "T${i}_Linux_Admins" -Path "OU=Linux Admins,$adminsPath"
     }
     
     Write-Host "`nOU structure creation completed successfully!"
