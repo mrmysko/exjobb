@@ -1,0 +1,18 @@
+DC:
+1. Install Windows
+2. Install DNS, DHCP and ADDS modules.
+3. Setup a domain.
+4. Run createOU.ps1
+5. Install admx files in <domain>/sysvol/<domain>/Policies/PolicyDefinitions
+
+Client:
+1. Install ubuntu
+2. Set dns server to DC
+3. Set hostname and hosts to <hostname>.<domain>
+4. Install realmd
+5. realm join -U <AD user> <domain>
+6. realm deny --all :(Deny local login from all AD accounts)
+7. realm permit -g <group> :(Permit local login of <group>)
+8. visudo -> %<group> ALL=(ALL) ALL :(Grant sudo permissions to users of <group>) 
+9. Setup ubuntu pro
+10. Install adsys
