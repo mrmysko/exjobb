@@ -1,3 +1,5 @@
+# Creates a basic tiered OU-structure
+
 param(
     [Parameter(Mandatory = $true)]
     [string]$CompanyName,
