@@ -42,7 +42,7 @@ autoinstall:
   #  domain-name: labb.se
 
   #ubuntu-pro:
-  #  token: C1rvwkaFo1C6kkimncyREbF2j9Ceu
+  #  token:
 
   ssh:
     install-server: true
