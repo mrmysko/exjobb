@@ -1,9 +1,12 @@
 Auto-setup, från första boot till att klienten är redo och med i AD.
 
-GPOer med ADSys
-
 Setup SQL- och Wordpress-servrar.
 
 Hur ska servrarna administreras? Auto-install SSH?
+- Setup scriptet kan: 
+    Installera ssh
+    Ställa in usePAM
+    Kopiera en publik SSH-key
+    Ändra sshd.conf så att det finns en authorized keys fil som den läser ifrån som inte ligger i varje admins hemkatalog.
 
 Lokala kontons lösenord, hur ska dom hanteras?
