@@ -1,9 +1,9 @@
-firstname,surname,department,phone,mail,city
-Stefan,Bong,Design,0707455437,stefan.bong@dd.com,Stockholm
-Anna-Karin,Korv,Design,0735643485,anna-karin.korv@dd.com,Stockholm
-Anders,Sjöman,Sales,0757464309,anders.sjoman@dd.com,Stockholm
-Charlie,Jensen,Sales Design,0769457295,charlie.jensen@dd.com,Stockholm
-Mohammed,Akbar,HR,0782347575,mohammed.akbar@dd.com,Stockholm
-Juán,de la Cruz,Design,0743457635,juan.cruz@dd.com,Stockholm
-Viktor,Östberg,Design,0724566753,viktor.ostberg@dd.com,Stockholm
-Jeanette,Östberg,Accounting,07434594,jeanette.ostberg@dd.com,Stockholm
+firstname,surname,department,phone,city
+Stefan,Bong,Design,0707455437,Stockholm
+Anna-Karin,Korv,Design,0735643485,Stockholm
+Anders,Sjöman,Sales,0757464309,Stockholm
+Charlie,Jensen,Sales Design,0769457295,Stockholm
+Mohammed,Akbar,HR,0782347575,Stockholm
+Juán,de la Cruz,Design,0743457635,Stockholm
+Viktor,Östberg,Design,0724566753,Stockholm
+Jeanette,Östberg,Accounting,07434594,Stockholm
