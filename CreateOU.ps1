@@ -70,7 +70,10 @@ try {
     Create-OUIfNotExists -Name "Windows" -Path $computersPath
     Create-OUIfNotExists -Name "Linux" -Path $computersPath
     
-    Create-AdminGroup -Name "TB_Admins" -Path "OU=Groups,$basePath"
+    # Create Admins OU inside Groups OU and place TB_Admins group there
+    $groupsPath = "OU=Groups,$basePath"
+    Create-OUIfNotExists -Name "Admins" -Path $groupsPath
+    Create-AdminGroup -Name "TB_Admins" -Path "OU=Admins,OU=Groups,$basePath"
     
     for ($i = 0; $i -lt $NumberOfTiers; $i++) {
         $tierName = "Tier $i"
