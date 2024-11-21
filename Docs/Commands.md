@@ -8,4 +8,5 @@
 |Check applied policies|```adsysctl policy applied```|
 
 adcli - Perform actions in Active Directory
+
 wbinfo - Winbind query tool.
