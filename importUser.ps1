@@ -1,8 +1,5 @@
 param(
     [Parameter(Mandatory = $true)]
-    [string]$CompanyName,
-    
-    [Parameter(Mandatory = $true)]
     [string]$CsvPath
 )
 
@@ -77,9 +74,9 @@ try {
     $domainDN = $domain.DistinguishedName
     $domainName = $domain.DNSRoot
     
-    # Construct the paths
-    $usersOUPath = "OU=Users,OU=Tier Base,OU=$CompanyName,$domainDN"
-    $groupsOUPath = "OU=Groups,OU=Tier Base,OU=$CompanyName,$domainDN"
+    # Construct the paths for the new structure
+    $usersOUPath = "OU=Users,OU=Tier Base,$domainDN"
+    $groupsOUPath = "OU=Groups,OU=Tier Base,$domainDN"
     
     # Verify the OUs exist
     try {
