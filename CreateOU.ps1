@@ -93,3 +93,6 @@ try {
     Write-Host "`nOU structure creation completed successfully!"
     
 }
+catch {
+    Write-Error ("An error occurred during OU structure creation - {0}" -f $_)
+}
