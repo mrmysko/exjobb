@@ -73,10 +73,11 @@ try {
     Create-OUIfNotExists -Name "Windows" -Path $computersPath
     Create-OUIfNotExists -Name "Linux" -Path $computersPath
     
-    # Create Base Tier Admins under root Admin OU
-    Create-OUIfNotExists -Name "Tier Base Admins" -Path $adminPath
-    $baseAdminPath = "OU=Tier Base Admins,$adminPath"
+    # Create Base Tier under root Admin OU
+    Create-OUIfNotExists -Name "Tier Base" -Path $adminPath
+    $baseAdminPath = "OU=Tier Base,$adminPath"
     Create-OUIfNotExists -Name "Groups" -Path $baseAdminPath
+    Create-OUIfNotExists -Name "Admins" -Path $baseAdminPath  # Changed from "Tier Base Admins"
     Create-AdminGroup -Name "TB_Admins" -Path "OU=Groups,$baseAdminPath"
     
     # Create other tiers under Admin OU
@@ -87,6 +88,7 @@ try {
         
         Create-OUIfNotExists -Name "Servers" -Path $tierPath
         Create-OUIfNotExists -Name "Groups" -Path $tierPath
+        Create-OUIfNotExists -Name "Admins" -Path $tierPath
         
         # Create Windows and Linux OUs under Servers
         $serversPath = "OU=Servers,$tierPath"
