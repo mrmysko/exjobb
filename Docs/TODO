@@ -1,9 +1,11 @@
 Auto-setup, från första boot till att klienten är redo och med i AD.
+    - Randomize hostname?
 
 Setup SQL- och Wordpress-servrar.
 
 Hur ska servrarna administreras? Auto-install SSH?
-- Setup scriptet kan: 
+
+- Setup scriptet kan:
     Installera ssh
     Ställa in usePAM
     Kopiera en publik SSH-key
@@ -11,6 +13,12 @@ Hur ska servrarna administreras? Auto-install SSH?
 
 Lokala kontons lösenord, hur ska dom hanteras?
 
-PSOer för användare - Implementera, appliceras dom på Linux också? 
+PSOer för användare - Implementera, appliceras dom på Linux också?
+
+Köra tjänster på Linux som service AD-konton
 
 Scripta Ubuntu Pro i setup-scriptet
+
+Om allt fungerar på Win2022 och Ubu22.04, fungerar det på Win2025 och Ubu24.04?
+
+Filserver på Windows som automountas via gpoer till Linuxklienter. Folder redirection?
