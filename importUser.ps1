@@ -20,7 +20,7 @@ function Remove-SpecialCharacters {
         }
     }
     
-    return $sb.ToString() -replace '[^a-zA-Z0-9]', ''
+    return $sb.ToString() -replace '[^a-zA-Z0-9\-]', ''
 }
 
 function Create-DepartmentOU {
@@ -133,19 +133,19 @@ try {
             # Create new user
             try {
                 $newUserParams = @{
-                    Name = $displayName
-                    GivenName = $user.firstname
-                    Surname = $user.surname
-                    DisplayName = $displayName
-                    SamAccountName = $samAccountName
-                    UserPrincipalName = $upn
-                    Path = $usersOUPath
-                    Department = $user.department
-                    City = $user.city
-                    OfficePhone = $user.phone
-                    Enabled = $true
+                    Name                  = $displayName
+                    GivenName             = $user.firstname
+                    Surname               = $user.surname
+                    DisplayName           = $displayName
+                    SamAccountName        = $samAccountName
+                    UserPrincipalName     = $upn
+                    Path                  = $usersOUPath
+                    Department            = $user.department
+                    City                  = $user.city
+                    OfficePhone           = $user.phone
+                    Enabled               = $true
                     ChangePasswordAtLogon = $true
-                    AccountPassword = (ConvertTo-SecureString "Welcome123!" -AsPlainText -Force)
+                    AccountPassword       = (ConvertTo-SecureString "Welcome123!" -AsPlainText -Force)
                 }
                 
                 $adUser = New-ADUser @newUserParams -PassThru
