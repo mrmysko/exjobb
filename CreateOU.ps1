@@ -8,7 +8,9 @@ param(
     [Parameter(Mandatory = $true)]
     [bool]$EnableDeleteProtection
 )
+
 Import-Module ActiveDirectory
+
 function Create-OUIfNotExists {
     param(
         [string]$Name,
@@ -30,6 +32,7 @@ function Create-OUIfNotExists {
         Write-Error ("Error creating/checking OU {0} in {1} - {2}" -f $Name, $Path, $_)
     }
 }
+
 function Create-AdminGroup {
     param(
         [string]$Name,
@@ -50,48 +53,55 @@ function Create-AdminGroup {
         Write-Error ("Error creating/checking Group {0} in {1} - {2}" -f $Name, $Path, $_)
     }
 }
+
 try {
     $domainDN = (Get-ADDomain).DistinguishedName
     
+    # Create Company root OU
     $companyPath = "OU=$CompanyName,$domainDN"
     Create-OUIfNotExists -Name $CompanyName -Path $domainDN
     
+    # Create Admin OU under Company root
+    Create-OUIfNotExists -Name "Admin" -Path $companyPath
+    $adminPath = "OU=Admin,$companyPath"
+    
+    # Create Tier Base
     Create-OUIfNotExists -Name "Tier Base" -Path $companyPath
     $basePath = "OU=Tier Base,$companyPath"
     
     Create-OUIfNotExists -Name "Users" -Path $basePath
-    Create-OUIfNotExists -Name "Admins" -Path $basePath
     Create-OUIfNotExists -Name "Groups" -Path $basePath
     Create-OUIfNotExists -Name "Computers" -Path $basePath
     $computersPath = "OU=Computers,$basePath"
     Create-OUIfNotExists -Name "Windows" -Path $computersPath
     Create-OUIfNotExists -Name "Linux" -Path $computersPath
     
-    # Create Admins OU inside Groups OU and place TB_Admins group there
-    $groupsPath = "OU=Groups,$basePath"
-    Create-OUIfNotExists -Name "Admins" -Path $groupsPath
-    Create-AdminGroup -Name "TB_Admins" -Path "OU=Admins,OU=Groups,$basePath"
+    # Create Base Tier Admins under root Admin OU
+    Create-OUIfNotExists -Name "Tier Base Admins" -Path $adminPath
+    $baseAdminPath = "OU=Tier Base Admins,$adminPath"
+    Create-OUIfNotExists -Name "Groups" -Path $baseAdminPath
+    Create-AdminGroup -Name "TB_Admins" -Path "OU=Groups,$baseAdminPath"
     
+    # Create other tiers under Admin OU
     for ($i = 0; $i -lt $NumberOfTiers; $i++) {
         $tierName = "Tier $i"
-        Create-OUIfNotExists -Name $tierName -Path $companyPath
-        $tierPath = "OU=$tierName,$companyPath"
+        Create-OUIfNotExists -Name $tierName -Path $adminPath
+        $tierPath = "OU=$tierName,$adminPath"
         
         Create-OUIfNotExists -Name "Servers" -Path $tierPath
-        Create-OUIfNotExists -Name "Admins" -Path $tierPath
         Create-OUIfNotExists -Name "Groups" -Path $tierPath
+        
+        # Create Windows and Linux OUs under Servers
         $serversPath = "OU=Servers,$tierPath"
         Create-OUIfNotExists -Name "Windows" -Path $serversPath
         Create-OUIfNotExists -Name "Linux" -Path $serversPath
         
-        # Create single tier admin group in Groups OU
-        $groupsPath = "OU=Groups,$tierPath"
-        Create-AdminGroup -Name "T${i}_Admins" -Path $groupsPath
+        # Create tier admin group
+        Create-AdminGroup -Name "T${i}_Admins" -Path "OU=Groups,$tierPath"
     }
     
     Write-Host "`nOU structure creation completed successfully!"
     Write-Host "Delete Protection is set to: $EnableDeleteProtection"
-    
 }
 catch {
     Write-Error ("An error occurred during OU structure creation - {0}" -f $_)
