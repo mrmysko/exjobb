@@ -1,0 +1,44 @@
+Stefan Bong - T0 Admin, Design:
+	- T0_Admin_Stefan
+	- T1_Admin_Stefan
+	- Base_Admin_Stefan
+	- Stefan
+
+Anna-karin Korv - T1 Admin, Design:
+	- T1_Admin_AK
+	- Base_Admin_AK
+	- AK
+	
+Anders Sjöman - Sales:
+	- Anders
+
+Charlie Jensen - Sales, Design:
+	- Charlie
+
+Mohammed Akbar - HR:
+	- Mohammed
+	
+Juán de la Cruz - Design:
+	- Juan
+	
+Viktor Östberg - Design:
+	- Viktor
+	
+Jeanette Östberg - Accounting:
+	- Jeanette
+	
+Definiera roller:
+	T0_Admin:
+		- Fulla rättigheter T0 Servrar och domänkontrollanter
+	T1_Admin:
+		- Fulla rättigheter till T1 Servrar
+	T_Base:
+		- Administrera användare och klienter i Tier_Base
+	Sales:
+		- 
+	Accounting:
+		- 
+	HR:
+		- 
+	Design:
+		- 

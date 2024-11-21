@@ -10,3 +10,7 @@ Hur ska servrarna administreras? Auto-install SSH?
     Ändra sshd.conf så att det finns en authorized keys fil som den läser ifrån som inte ligger i varje admins hemkatalog.
 
 Lokala kontons lösenord, hur ska dom hanteras?
+
+PSOer för användare - Implementera, appliceras dom på Linux också? 
+
+Scripta Ubuntu Pro i setup-scriptet
