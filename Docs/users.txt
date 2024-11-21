@@ -1,31 +1,31 @@
 Stefan Bong - T0 Admin, Design:
-	- T0_Admin_Stefan
-	- T1_Admin_Stefan
-	- Base_Admin_Stefan
+	- T0_Stefanbo
+	- T1_Stefanbo
+	- Base_Stefanbo
 	- Stefan
 
 Anna-karin Korv - T1 Admin, Design:
-	- T1_Admin_AK
-	- Base_Admin_AK
-	- AK
+	- T1_Anna-karinko
+	- Base_Anna-karinko
+	- Anna-karinko
 	
 Anders Sjöman - Sales:
-	- Anders
+	- Anderssj
 
 Charlie Jensen - Sales, Design:
-	- Charlie
+	- Charlieje
 
 Mohammed Akbar - HR:
-	- Mohammed
+	- Mohammedak
 	
 Juán de la Cruz - Design:
-	- Juan
+	- Juande
 	
 Viktor Östberg - Design:
-	- Viktor
+	- Viktoros
 	
 Jeanette Östberg - Accounting:
-	- Jeanette
+	- Jeanetteos
 	
 Definiera roller:
 	T0_Admin:
