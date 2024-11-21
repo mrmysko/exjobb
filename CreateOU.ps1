@@ -1,15 +1,14 @@
-# Creates a basic tiered OU-structure
-
 param(
     [Parameter(Mandatory = $true)]
     [string]$CompanyName,
     
     [Parameter(Mandatory = $true)]
-    [int]$NumberOfTiers
+    [int]$NumberOfTiers,
+    
+    [Parameter(Mandatory = $true)]
+    [bool]$EnableDeleteProtection
 )
-
 Import-Module ActiveDirectory
-
 function Create-OUIfNotExists {
     param(
         [string]$Name,
@@ -19,18 +18,18 @@ function Create-OUIfNotExists {
     try {
         $ouExists = Get-ADOrganizationalUnit -Filter "Name -eq '$Name'" -SearchBase $Path -SearchScope OneLevel
         if (-not $ouExists) {
-            New-ADOrganizationalUnit -Name $Name -Path $Path
-            Write-Host "Created OU: $Name in $Path"
+            New-ADOrganizationalUnit -Name $Name -Path $Path -ProtectedFromAccidentalDeletion $EnableDeleteProtection
+            Write-Host "Created OU: $Name in $Path (Delete Protection: $EnableDeleteProtection)"
         }
         else {
-            Write-Host "OU already exists: $Name in $Path"
+            Set-ADOrganizationalUnit -Identity "OU=$Name,$Path" -ProtectedFromAccidentalDeletion $EnableDeleteProtection
+            Write-Host "OU already exists: $Name in $Path (Updated Delete Protection: $EnableDeleteProtection)"
         }
     }
     catch {
         Write-Error ("Error creating/checking OU {0} in {1} - {2}" -f $Name, $Path, $_)
     }
 }
-
 function Create-AdminGroup {
     param(
         [string]$Name,
@@ -51,7 +50,6 @@ function Create-AdminGroup {
         Write-Error ("Error creating/checking Group {0} in {1} - {2}" -f $Name, $Path, $_)
     }
 }
-
 try {
     $domainDN = (Get-ADDomain).DistinguishedName
     
@@ -65,7 +63,6 @@ try {
     Create-OUIfNotExists -Name "Admins" -Path $basePath
     Create-OUIfNotExists -Name "Groups" -Path $basePath
     Create-OUIfNotExists -Name "Computers" -Path $basePath
-
     $computersPath = "OU=Computers,$basePath"
     Create-OUIfNotExists -Name "Windows" -Path $computersPath
     Create-OUIfNotExists -Name "Linux" -Path $computersPath
@@ -83,7 +80,6 @@ try {
         Create-OUIfNotExists -Name "Servers" -Path $tierPath
         Create-OUIfNotExists -Name "Admins" -Path $tierPath
         Create-OUIfNotExists -Name "Groups" -Path $tierPath
-
         $serversPath = "OU=Servers,$tierPath"
         Create-OUIfNotExists -Name "Windows" -Path $serversPath
         Create-OUIfNotExists -Name "Linux" -Path $serversPath
@@ -94,6 +90,7 @@ try {
     }
     
     Write-Host "`nOU structure creation completed successfully!"
+    Write-Host "Delete Protection is set to: $EnableDeleteProtection"
     
 }
 catch {
