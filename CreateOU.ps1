@@ -1,8 +1,5 @@
 param(
     [Parameter(Mandatory = $true)]
-    [string]$CompanyName,
-    
-    [Parameter(Mandatory = $true)]
     [int]$NumberOfTiers,
     
     [Parameter(Mandatory = $true)]
@@ -55,19 +52,19 @@ function Create-AdminGroup {
 }
 
 try {
-    $domainDN = (Get-ADDomain).DistinguishedName
+    # Get the domain information
+    $domain = Get-ADDomain
+    $domainDN = $domain.DistinguishedName
+    $rootDomain = $domain.DNSRoot
+    Write-Host "Using domain: $rootDomain"
     
-    # Create Company root OU
-    $companyPath = "OU=$CompanyName,$domainDN"
-    Create-OUIfNotExists -Name $CompanyName -Path $domainDN
+    # Create Admin OU at root level
+    Create-OUIfNotExists -Name "Admin" -Path $domainDN
+    $adminPath = "OU=Admin,$domainDN"
     
-    # Create Admin OU under Company root
-    Create-OUIfNotExists -Name "Admin" -Path $companyPath
-    $adminPath = "OU=Admin,$companyPath"
-    
-    # Create Tier Base
-    Create-OUIfNotExists -Name "Tier Base" -Path $companyPath
-    $basePath = "OU=Tier Base,$companyPath"
+    # Create Tier Base at root level
+    Create-OUIfNotExists -Name "Tier Base" -Path $domainDN
+    $basePath = "OU=Tier Base,$domainDN"
     
     Create-OUIfNotExists -Name "Users" -Path $basePath
     Create-OUIfNotExists -Name "Groups" -Path $basePath
