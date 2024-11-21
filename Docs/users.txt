@@ -1,12 +1,12 @@
 Stefan Bong - T0 Admin, Design:
 	- T0_Stefanbo
 	- T1_Stefanbo
-	- Base_Stefanbo
+	- Base-Stefanbo
 	- Stefan
 
 Anna-karin Korv - T1 Admin, Design:
 	- T1_Anna-karinko
-	- Base_Anna-karinko
+	- Base-Anna-karinko
 	- Anna-karinko
 	
 Anders Sjöman - Sales:
