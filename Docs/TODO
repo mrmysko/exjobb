@@ -28,3 +28,7 @@ Skapa default GPOer som importeras av scriptet till varje tier.
 Definiera brandväggsregler.
 
 Skapa ett nätverksdiagram.
+
+Change realmd.conf, sync time to DC on Linux
+
+Enable and control RDP to Windows Servers

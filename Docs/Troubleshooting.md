@@ -4,3 +4,4 @@
 |AD not updating DNS Records on Linux join|
 |Home directory not created on first login|Use: ```pam-auth-update --enable mkhomedir```|
 |Users on clients can't change settings|
+|RPC Server is unavailable|
