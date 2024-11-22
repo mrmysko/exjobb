@@ -22,3 +22,9 @@ Scripta Ubuntu Pro i setup-scriptet
 Om allt fungerar på Win2022 och Ubu22.04, fungerar det på Win2025 och Ubu24.04?
 
 Filserver på Windows som automountas via gpoer till Linuxklienter. Folder redirection?
+
+Skapa default GPOer som importeras av scriptet till varje tier.
+
+Definiera brandväggsregler.
+
+Skapa ett nätverksdiagram.

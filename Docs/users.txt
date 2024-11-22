@@ -1,11 +1,11 @@
 Stefan Bong - T0 Admin, Design:
-	- T0_Stefanbo
-	- T1_Stefanbo
+	- T0-Stefanbo
+	- T1-Stefanbo
 	- Base-Stefanbo
 	- Stefan
 
 Anna-karin Korv - T1 Admin, Design:
-	- T1_Anna-karinko
+	- T1-Anna-karinko
 	- Base-Anna-karinko
 	- Anna-karinko
 	
@@ -30,10 +30,11 @@ Jeanette Östberg - Accounting:
 Definiera roller:
 	T0_Admin:
 		- Fulla rättigheter T0 Servrar och domänkontrollanter
+		- Kan administrera AD
 	T1_Admin:
 		- Fulla rättigheter till T1 Servrar
 	T_Base:
-		- Administrera användare och klienter i Tier_Base
+		- Delegerade rättigheter till användare och klienter i Tier_Base
 	Sales:
 		- 
 	Accounting:
@@ -41,4 +42,4 @@ Definiera roller:
 	HR:
 		- 
 	Design:
-		- 
+		- Redigera Wordpress
