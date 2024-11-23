@@ -27,8 +27,6 @@ Definiera brandväggsregler.
 
 Skapa ett nätverksdiagram.
 
-Change realmd.conf, sync time to DC on Linux
-
 Enable and control RDP to Windows Servers
 
 # Scripta Ubuntu Pro i setup-scriptet

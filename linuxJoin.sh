@@ -2,7 +2,7 @@
 
 # Todo - Config ssh and ssh key in case of client=False
 
-# Usage: sudo bash -c "${wget -qLO - https://raw.githubusercontent.com/mrmysko/exjobb/refs/heads/main/domainSetup.sh}"
+# Usage: sudo bash -c "${wget -qLO - https://raw.githubusercontent.com/mrmysko/exjobb/refs/heads/main/linuxJoin.sh}"
 
 DOMAIN_USER="Administrator"
 DOMAIN="Labb.se"
@@ -32,7 +32,7 @@ fi
 msg_info "Setting up client"
 
 msg_info "Installing dependencies"
-if ! (apt -qq update && apt -qq install -y realmd sssd sssd-tools libnss-sss adcli krb5-user); then
+if ! (apt -qq update && apt -qq install -y realmd sssd sssd-tools libnss-sss adcli krb5-user adsys); then
     msg_error "Failed to install dependencies"
     exit 1
 fi
