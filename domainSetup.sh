@@ -36,7 +36,7 @@ fi
 msg_info "Setting up client"
 
 msg_info "Installing dependencies"
-if ! apt update && apt install -y realmd sssd sssd-tools libnss-sss adcli; then
+if ! (apt update && apt install -y realmd sssd sssd-tools libnss-sss adcli); then
     msg_error "Failed to install dependencies"
     exit 1
 fi
@@ -49,10 +49,10 @@ os-name = $NAME
 os-version = $VERSION
 
 [users]
-default-home = /home/%D/%U
+default-home = /home/%d/%u
 
 [$DOMAIN]
-fully-qualified-names = Off
+fully-qualified-names = False
 
 EOF
 
@@ -70,13 +70,13 @@ fi
 msg_info "Enable pam_mkhomedir"
 pam-auth-update --enable mkhomedir
 
-msg_info "Changing login permissions"
-realm deny --all
-realm permit -g "$PERMIT_ADMIN"
+#msg_info "Changing login permissions"
+#realm deny --all
+#realm permit -g "$PERMIT_ADMIN"
 
-if [[ $CLIENT ]]; then
-    realm permit -g "$PERMIT_GROUP"
-fi
+#if [[ $CLIENT ]]; then
+#    realm permit -g "$PERMIT_GROUP"
+#fi
 
 #msg_info "Giving sudo to admins"
 #SUDOERS_TEMP=$(mktemp)
