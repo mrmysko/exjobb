@@ -1,15 +1,11 @@
 #!/usr/bin/env bash
 
-# Todo - Config ubuntu pro and adsys
 # Todo - Config ssh and ssh key in case of client=False
 
 # Usage: sudo bash -c "${wget -qLO - https://raw.githubusercontent.com/mrmysko/exjobb/refs/heads/main/domainSetup.sh}"
 
-CLIENT=true
 DOMAIN_USER="Administrator"
 DOMAIN="Labb.se"
-PERMIT_GROUP="Domain Users"
-PERMIT_ADMIN="Domain Admins"
 
 # Get system info
 NAME=$(lsb_release -a 2>/dev/null | grep "Distributor ID:" | cut -f2)
@@ -36,7 +32,7 @@ fi
 msg_info "Setting up client"
 
 msg_info "Installing dependencies"
-if ! (apt -qq update && apt -qq install -y realmd sssd sssd-tools libnss-sss adcli); then
+if ! (apt -qq update && apt -qq install -y realmd sssd sssd-tools libnss-sss adcli krb5-user); then
     msg_error "Failed to install dependencies"
     exit 1
 fi
@@ -62,27 +58,43 @@ else
     msg_info "Successfully joined domain $DOMAIN"
 fi
 
-msg_info "Change sssd conf"
-#sed -i 's/fallback_homedir = .*/fallback_homedir = \/home\/%u/' /etc/sssd/sssd.conf
+msg_info "Changing sssd conf"
 sed -i 's/use_fully_qualified_names = .*/use_fully_qualified_names = False/' /etc/sssd/sssd.conf
-#systemctl restart sssd
+systemctl restart sssd
 
-msg_info "Enable pam_mkhomedir"
+msg_info "Enabling pam_mkhomedir"
 pam-auth-update --enable mkhomedir
 
-#msg_info "Changing login permissions"
-#realm deny --all
-#realm permit -g "$PERMIT_ADMIN"
+# Enable Ubuntu Pro
+msg_info "Enabling Ubuntu Pro"
 
-#if [[ $CLIENT ]]; then
-#    realm permit -g "$PERMIT_GROUP"
-#fi
+# Prompt for token
+while true; do
+    read -p "Ubuntu Pro token: " TOKEN
+    if [ -z "$TOKEN" ]; then
+        msg_error "Token cannot be empty."
+        continue
+    fi
 
-#msg_info "Giving sudo to admins"
-#SUDOERS_TEMP=$(mktemp)
-#echo "%$(escape_spaces "${PERMIT_ADMIN}") ALL=(ALL) ALL" >"$SUDOERS_TEMP"
-#visudo --check --quiet "$SUDOERS_TEMP" && mv "$SUDOERS_TEMP" /etc/sudoers.d/domain_sudoers
+    if ! pro attach "$TOKEN"; then
+        msg_error "Failed to activate Ubuntu Pro. Verify your token."
+        read -p "Try again? [Y/N]: " RETRY
+        if [[ "${RETRY:0:1}" =~ [Nn] ]]; then
+            msg_error "Ubuntu Pro activation cancelled"
+            exit 1
+        fi
+        continue
+    fi
 
-msg_info "Rebooting in 5 seconds..."
-sleep 5
-reboot
+    msg_info "Ubuntu Pro successfully activated"
+    break
+done
+
+# Restart
+read -p "Domain Setup complete. Press ENTER to reboot..."
+echo "Rebooting system in 5 seconds..."
+for i in {5..1}; do
+    echo -n "$i... "
+    sleep 1
+done
+/sbin/reboot

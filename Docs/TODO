@@ -17,8 +17,6 @@ PSOer för användare - Implementera, appliceras dom på Linux också?
 
 Köra tjänster på Linux som service AD-konton
 
-Scripta Ubuntu Pro i setup-scriptet
-
 Om allt fungerar på Win2022 och Ubu22.04, fungerar det på Win2025 och Ubu24.04?
 
 Filserver på Windows som automountas via gpoer till Linuxklienter. Folder redirection?
@@ -32,3 +30,5 @@ Skapa ett nätverksdiagram.
 Change realmd.conf, sync time to DC on Linux
 
 Enable and control RDP to Windows Servers
+
+# Scripta Ubuntu Pro i setup-scriptet
