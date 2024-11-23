@@ -10,11 +10,17 @@ DOMAIN_USER="Administrator"
 DOMAIN="Labb.se"
 PERMIT_GROUP="Domain Users"
 PERMIT_ADMIN="Domain Admins"
+
+# Get system info
 NAME=$(lsb_release -a 2>/dev/null | grep "Distributor ID:" | cut -f2)
 VERSION=$(lsb_release -a 2>/dev/null | grep "Release:" | cut -f2)
 
 msg_info() {
     echo "[INFO] $1"
+}
+
+msg_error() {
+    echo "[ERROR] $1"
 }
 
 escape_spaces() {
@@ -23,7 +29,7 @@ escape_spaces() {
 }
 
 if [ "$EUID" -ne 0 ]; then
-    echo "Root required"
+    msg_error "Root required"
     exit 1
 fi
 
@@ -31,7 +37,7 @@ msg_info "Setting up client"
 
 msg_info "Installing dependencies"
 if ! apt update && apt install -y realmd sssd sssd-tools libnss-sss adcli; then
-    msg_info "Failed to install dependencies"
+    msg_error "Failed to install dependencies"
     exit 1
 fi
 
@@ -52,7 +58,7 @@ EOF
 
 msg_info "Joining domain."
 if ! realm join -U "$DOMAIN_USER" "$DOMAIN"; then
-    msg_info "Failed to join domain"
+    msg_error "Failed to join domain"
     exit 1
 fi
 
