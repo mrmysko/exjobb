@@ -36,7 +36,7 @@ fi
 msg_info "Setting up client"
 
 msg_info "Installing dependencies"
-if ! (apt update && apt install -y realmd sssd sssd-tools libnss-sss adcli); then
+if ! (apt -qq update && apt -qq install -y realmd sssd sssd-tools libnss-sss adcli); then
     msg_error "Failed to install dependencies"
     exit 1
 fi
@@ -60,6 +60,9 @@ msg_info "Joining domain."
 if ! realm join -U "$DOMAIN_USER" "$DOMAIN"; then
     msg_error "Failed to join domain"
     exit 1
+
+else
+    msg_info "Successfully joined domain $DOMAIN"
 fi
 
 #msg_info "Change sssd conf"
