@@ -51,9 +51,6 @@ os-version = $VERSION
 [users]
 default-home = /home/%d/%u
 
-[$DOMAIN]
-fully-qualified-names = False
-
 EOF
 
 msg_info "Joining domain."
@@ -65,9 +62,9 @@ else
     msg_info "Successfully joined domain $DOMAIN"
 fi
 
-#msg_info "Change sssd conf"
+msg_info "Change sssd conf"
 #sed -i 's/fallback_homedir = .*/fallback_homedir = \/home\/%u/' /etc/sssd/sssd.conf
-#sed -i 's/use_fully_qualified_names = .*/use_fully_qualified_names = False/' /etc/sssd/sssd.conf
+sed -i 's/use_fully_qualified_names = .*/use_fully_qualified_names = False/' /etc/sssd/sssd.conf
 #systemctl restart sssd
 
 msg_info "Enable pam_mkhomedir"
