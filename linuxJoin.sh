@@ -2,7 +2,7 @@
 
 # Todo - Config ssh and ssh key in case of client=False
 
-# Usage: sudo bash -c "${wget -qLO - https://raw.githubusercontent.com/mrmysko/exjobb/refs/heads/main/linuxJoin.sh}"
+# Usage: sudo bash -c "$(wget -qLO - https://raw.githubusercontent.com/mrmysko/exjobb/refs/heads/main/linuxJoin.sh)"
 
 DOMAIN_USER="Administrator"
 DOMAIN="Labb.se"
