@@ -34,7 +34,7 @@ fi
 msg_info "Setting up client"
 
 msg_info "Installing dependencies"
-if ! (apt -qq update && DEBIAN_FRONTEND=noninteractive apt -qq install -y "$DEPENDENCIES"); then
+if ! (apt -qq update && DEBIAN_FRONTEND=noninteractive apt -qq install -y $DEPENDENCIES); then
     msg_error "Failed to install dependencies"
     exit 1
 fi
