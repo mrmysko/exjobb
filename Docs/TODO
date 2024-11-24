@@ -30,3 +30,9 @@ Skapa ett nätverksdiagram.
 Enable and control RDP to Windows Servers
 
 # Scripta Ubuntu Pro i setup-scriptet
+
+Recent versions of OpenSSH have made this much easier to accomplish!
+
+In /etc/ssh/sshd_config simply add the following:
+
+AuthenticationMethods "publickey,password" "publickey,keyboard-interactive"

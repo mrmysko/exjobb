@@ -4,8 +4,10 @@
 
 # Usage: sudo bash -c "$(wget -qLO - https://raw.githubusercontent.com/mrmysko/exjobb/refs/heads/main/linuxJoin.sh)"
 
+CLIENT=false
 DOMAIN_USER="Administrator"
 DOMAIN="Labb.se"
+DEPENDENCIES="realmd sssd sssd-tools libnss-sss adcli krb5-user adsys"
 
 # Get system info
 NAME=$(lsb_release -a 2>/dev/null | grep "Distributor ID:" | cut -f2)
@@ -32,7 +34,7 @@ fi
 msg_info "Setting up client"
 
 msg_info "Installing dependencies"
-if ! (apt -qq update && apt -qq install -y realmd sssd sssd-tools libnss-sss adcli krb5-user adsys); then
+if ! (apt -qq update && DEBIAN_FRONTEND=noninteractive apt -qq install -y "$DEPENDENCIES"); then
     msg_error "Failed to install dependencies"
     exit 1
 fi
@@ -89,6 +91,11 @@ while true; do
     msg_info "Ubuntu Pro successfully activated"
     break
 done
+
+# Configure SSH
+if ! [[ $CLIENT ]]; then
+    DEBIAN_FRONTEND=noninteractive apt -qq install -y openssh-server
+fi
 
 # Restart
 read -p "Domain Setup complete. Press ENTER to reboot..."
