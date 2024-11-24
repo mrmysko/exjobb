@@ -7,7 +7,6 @@
 CLIENT=false
 DOMAIN_USER="Administrator"
 DOMAIN="Labb.se"
-DEPENDENCIES=realmd sssd sssd-tools libnss-sss adcli krb5-user adsys
 
 # Get system info
 NAME=$(lsb_release -a 2>/dev/null | grep "Distributor ID:" | cut -f2)
@@ -34,7 +33,8 @@ fi
 msg_info "Setting up client"
 
 msg_info "Installing dependencies"
-if ! (apt -qq update && DEBIAN_FRONTEND=noninteractive apt -qq install -y $DEPENDENCIES); then
+if ! (apt -qq update && DEBIAN_FRONTEND=noninteractive apt -qq install -y \
+    realmd sssd sssd-tools libnss-sss adcli krb5-user adsys); then
     msg_error "Failed to install dependencies"
     exit 1
 fi
