@@ -46,10 +46,10 @@ default-client = sssd
 os-name = $NAME
 os-version = $VERSION
 
-[users]
-default-home = /home/%d/%u
-
 EOF
+
+#users]
+#default-home = /home/%d/%u
 
 msg_info "Joining domain."
 if ! realm join -U "$DOMAIN_USER" "$DOMAIN"; then
@@ -60,9 +60,9 @@ else
     msg_info "Successfully joined domain $DOMAIN"
 fi
 
-msg_info "Changing sssd conf"
-sed -i 's/use_fully_qualified_names = .*/use_fully_qualified_names = False/' /etc/sssd/sssd.conf
-systemctl restart sssd
+#msg_info "Changing sssd conf"
+#sed -i 's/use_fully_qualified_names = .*/use_fully_qualified_names = False/' /etc/sssd/sssd.conf
+#systemctl restart sssd
 
 msg_info "Enabling pam_mkhomedir"
 pam-auth-update --enable mkhomedir
@@ -83,7 +83,6 @@ while true; do
         read -p "Try again? [Y/N]: " RETRY
         if [[ "${RETRY:0:1}" =~ [Nn] ]]; then
             msg_error "Ubuntu Pro activation cancelled"
-            exit 1
         fi
         continue
     fi
