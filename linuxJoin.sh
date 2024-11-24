@@ -48,8 +48,8 @@ os-version = $VERSION
 
 EOF
 
-#users]
-#default-home = /home/%d/%u
+[users]
+default-home = /home/%d/%u
 
 msg_info "Joining domain."
 if ! realm join -U "$DOMAIN_USER" "$DOMAIN"; then
@@ -83,6 +83,7 @@ while true; do
         read -p "Try again? [Y/N]: " RETRY
         if [[ "${RETRY:0:1}" =~ [Nn] ]]; then
             msg_error "Ubuntu Pro activation cancelled"
+            break
         fi
         continue
     fi
