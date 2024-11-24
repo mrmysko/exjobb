@@ -7,7 +7,7 @@
 CLIENT=false
 DOMAIN_USER="Administrator"
 DOMAIN="Labb.se"
-DEPENDENCIES="realmd sssd sssd-tools libnss-sss adcli krb5-user adsys"
+DEPENDENCIES=realmd sssd sssd-tools libnss-sss adcli krb5-user adsys
 
 # Get system info
 NAME=$(lsb_release -a 2>/dev/null | grep "Distributor ID:" | cut -f2)
