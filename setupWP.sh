@@ -2,6 +2,12 @@
 
 # Usage: sudo bash -c "$(wget -qLO - https://raw.githubusercontent.com/mrmysko/exjobb/refs/heads/main/wpSetup.sh)"
 
+MYSQL_DATABASE="wordpress"
+MYSQL_DB_HOST="sql.labb.se"
+MYSQL_USER="wordpress"
+WP_ADMIN_PASSWORD="Linux4Ever"
+
+
 msg_info() {
     echo "[INFO] $1"
 }
@@ -19,7 +25,7 @@ fi
 # Install dependencies
 msg_info "Installing dependencies"
 if ! (apt -qq update && DEBIAN_FRONTEND=noninteractive apt -qq install -y \
-    apache2 libapache2-mod-php php-mysql php-ldap); then
+    apache2 libapache2-mod-php php-mysql php-ldap curl); then
     msg_error "Failed to install dependencies"
     exit 1
 fi
@@ -70,5 +76,34 @@ if ! systemctl restart apache2; then
     msg_error "Failed to restart Apache"
     exit 1
 fi
+
+# Create wp-config.php
+cat > "wp-config.php" << EOF
+<?php
+
+define( 'DB_NAME', '$MYSQL_DATABASE' );
+define( 'DB_USER', '$MYSQL_USER' );
+define( 'DB_PASSWORD', '$WP_ADMIN_PASSWORD' );
+define( 'DB_HOST', '$MYSQL_DB_HOST' );
+define( 'DB_CHARSET', 'utf8' );
+define( 'DB_COLLATE', '' );
+EOF
+
+curl -s https://api.wordpress.org/secret-key/1.1/salt/ >> wp-config.php
+
+cat >> "wp-config.php" << "EOF"
+
+$table_prefix = 'wp_';
+define( 'WP_DEBUG', false );
+
+/** Absolute path to the WordPress directory. */
+if ( ! defined( 'ABSPATH' ) ) {
+    define( 'ABSPATH', __DIR__ . '/' );
+}
+
+/** Sets up WordPress vars and included files. */
+require_once ABSPATH . 'wp-settings.php';
+EOF
+
 
 msg_info "WordPress installation completed successfully"
