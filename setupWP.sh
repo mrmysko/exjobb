@@ -37,19 +37,6 @@ if ! wget -qO - https://wordpress.org/latest.tar.gz | tar -xz -C /var/www/; then
     exit 1
 fi
 
-# Set proper permissions
-msg_info "Setting permissions"
-chown -R www-data:www-data /var/www/wordpress
-chmod -R 755 /var/www/wordpress
-
-# Configure Apache
-msg_info "Configuring Apache"
-a2dissite 000-default.conf
-
-# Enable required modules
-a2enmod rewrite
-a2enmod php
-
 # Create Apache configuration for WordPress
 cat > /etc/apache2/sites-available/wordpress.conf << 'EOF'
 <VirtualHost *:80>
@@ -67,15 +54,7 @@ cat > /etc/apache2/sites-available/wordpress.conf << 'EOF'
 </VirtualHost>
 EOF
 
-# Enable WordPress site
-a2ensite wordpress.conf
-
-# Restart Apache
-msg_info "Restarting Apache"
-if ! systemctl restart apache2; then
-    msg_error "Failed to restart Apache"
-    exit 1
-fi
+cd /var/www/wordpress || exit
 
 # Create wp-config.php
 cat > "wp-config.php" << EOF
@@ -105,5 +84,35 @@ if ( ! defined( 'ABSPATH' ) ) {
 require_once ABSPATH . 'wp-settings.php';
 EOF
 
+# Configure Apache
+msg_info "Configuring Apache"
+a2dissite 000-default.conf
+
+# Enable required modules
+a2enmod rewrite
+a2enmod php
+
+# Enable WordPress site
+a2ensite wordpress.conf
+
+# Set proper permissions
+msg_info "Setting permissions"
+chown -R www-data:www-data /var/www/wordpress
+chmod -R 755 /var/www/wordpress
+
+# Restart Apache
+msg_info "Restarting Apache"
+if ! systemctl restart apache2; then
+    msg_error "Failed to restart Apache"
+    exit 1
+fi
 
 msg_info "WordPress installation completed successfully"
+
+msg_info "Setting up WP-CLI"
+curl -O https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar
+
+chmod +x wp-cli.phar
+mv wp-cli.phar /usr/local/bin/wp
+
+wp --allow-root --path=/var/www/wordpress core install --title=Homepage --admin_user="$WP_ADMIN_USER" --admin_password="$WP_ADMIN_PASSWORD" --skip-email
