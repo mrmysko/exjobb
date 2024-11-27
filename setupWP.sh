@@ -115,4 +115,4 @@ curl -O https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.pha
 chmod +x wp-cli.phar
 mv wp-cli.phar /usr/local/bin/wp
 
-wp --allow-root --path=/var/www/wordpress core install --title=Homepage --admin_user="$WP_ADMIN_USER" --admin_password="$WP_ADMIN_PASSWORD" --skip-email
+wp --allow-root --path=/var/www/wordpress core install --url="www.labb.se" --admin_email="admin.labb.se" --title=Homepage --admin_user="$WP_ADMIN_USER" --admin_password="$WP_ADMIN_PASSWORD" --skip-email
