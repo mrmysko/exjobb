@@ -48,8 +48,8 @@ os-version = $VERSION
 
 EOF
 
-[users]
-default-home = /home/%d/%u
+#[users]
+#default-home = /home/%d/%u
 
 msg_info "Joining domain."
 if ! realm join -U "$DOMAIN_USER" "$DOMAIN"; then
