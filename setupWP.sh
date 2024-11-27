@@ -54,35 +54,35 @@ cat > /etc/apache2/sites-available/wordpress.conf << 'EOF'
 </VirtualHost>
 EOF
 
-cd /var/www/wordpress || exit
+# cd /var/www/wordpress || exit
 
-# Create wp-config.php
-cat > "wp-config.php" << EOF
-<?php
+# # Create wp-config.php
+# cat > "wp-config.php" << EOF
+# <?php
 
-define( 'DB_NAME', '$MYSQL_DATABASE' );
-define( 'DB_USER', '$MYSQL_USER' );
-define( 'DB_PASSWORD', '$WP_ADMIN_PASSWORD' );
-define( 'DB_HOST', '$MYSQL_DB_HOST' );
-define( 'DB_CHARSET', 'utf8' );
-define( 'DB_COLLATE', '' );
-EOF
+# define( 'DB_NAME', '$MYSQL_DATABASE' );
+# define( 'DB_USER', '$MYSQL_USER' );
+# define( 'DB_PASSWORD', '$WP_ADMIN_PASSWORD' );
+# define( 'DB_HOST', '$MYSQL_DB_HOST' );
+# define( 'DB_CHARSET', 'utf8' );
+# define( 'DB_COLLATE', '' );
+# EOF
 
-curl -s https://api.wordpress.org/secret-key/1.1/salt/ >> wp-config.php
+# curl -s https://api.wordpress.org/secret-key/1.1/salt/ >> wp-config.php
 
-cat >> "wp-config.php" << "EOF"
+# cat >> "wp-config.php" << "EOF"
 
-$table_prefix = 'wp_';
-define( 'WP_DEBUG', false );
+# $table_prefix = 'wp_';
+# define( 'WP_DEBUG', false );
 
-/** Absolute path to the WordPress directory. */
-if ( ! defined( 'ABSPATH' ) ) {
-    define( 'ABSPATH', __DIR__ . '/' );
-}
+# /** Absolute path to the WordPress directory. */
+# if ( ! defined( 'ABSPATH' ) ) {
+#     define( 'ABSPATH', __DIR__ . '/' );
+# }
 
-/** Sets up WordPress vars and included files. */
-require_once ABSPATH . 'wp-settings.php';
-EOF
+# /** Sets up WordPress vars and included files. */
+# require_once ABSPATH . 'wp-settings.php';
+# EOF
 
 # Configure Apache
 msg_info "Configuring Apache"
@@ -115,4 +115,4 @@ curl -O https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.pha
 chmod +x wp-cli.phar
 mv wp-cli.phar /usr/local/bin/wp
 
-wp --allow-root --path=/var/www/wordpress core install --url="www.labb.se" --admin_email="admin.labb.se" --title=Homepage --admin_user="$WP_ADMIN_USER" --admin_password="$WP_ADMIN_PASSWORD" --admin_email="admin@labb.se"
+#wp --allow-root --path=/var/www/wordpress core install --url="www.labb.se" --admin_email="admin.labb.se" --title=Homepage --admin_user="$WP_ADMIN_USER" --admin_password="$WP_ADMIN_PASSWORD" --admin_email="admin@labb.se"
