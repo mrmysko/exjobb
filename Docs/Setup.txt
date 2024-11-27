@@ -16,3 +16,9 @@ Client:
 8. visudo -> %<group> ALL=(ALL) ALL :(Grant sudo permissions to users of <group>) 
 9. Setup ubuntu pro
 10. Install adsys
+
+
+libapache2-mod-php
+php-mysql
+https://wordpress.org/latest.tar.gz
+tar -xvf latest.tar.gz

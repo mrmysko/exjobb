@@ -5,3 +5,4 @@
 |Home directory not created on first login||Use: ```pam-auth-update --enable mkhomedir```|
 |Users on clients can't change settings|SSSD conf specifies use_fully_qualified_names = False, but profiles are created with FQDN|
 |RPC Server is unavailable||
+|(SSH) Permission denied (gssapi-with-mic)||

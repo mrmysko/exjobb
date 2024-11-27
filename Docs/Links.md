@@ -11,3 +11,9 @@
 [Advanced Ubuntu Configuration with Active Directory](https://michaelwaterman.nl/2022/10/07/advanced-ubuntu-configuration-with-active-directory/)
 
 [Managing SUDO from Active Directory](https://michaelwaterman.nl/2022/10/21/managing-sudo-from-active-directory/)
+
+[Install and configure WordPress](https://ubuntu.com/tutorials/install-and-configure-wordpress)
+
+[(Wordpress) Active Directory Integration / LDAP Integration](https://wordpress.org/plugins/ldap-login-for-intranet-sites/)
+
+[WP-CLI](https://wp-cli.org/)
