@@ -19,6 +19,7 @@ Client:
 
 
 libapache2-mod-php
+php-ldap
 php-mysql
 https://wordpress.org/latest.tar.gz
 tar -xvf latest.tar.gz

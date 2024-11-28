@@ -14,6 +14,7 @@
 
 [Install and configure WordPress](https://ubuntu.com/tutorials/install-and-configure-wordpress)
 
-[(Wordpress) Active Directory Integration / LDAP Integration](https://wordpress.org/plugins/ldap-login-for-intranet-sites/)
-
 [WP-CLI](https://wp-cli.org/)
+
+[(WP-Plugin) Next Active Directory Integration](https://active-directory-wp.com/next-active-directory-integration/)
+[(WP-Plugin) Active Directory Integration / LDAP Integration](https://wordpress.org/plugins/ldap-login-for-intranet-sites/)

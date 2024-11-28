@@ -7,7 +7,6 @@ Hur ska servrarna administreras? Auto-install SSH?
 
 - Setup scriptet kan:
     Installera ssh
-    Ställa in usePAM
     Kopiera en publik SSH-key
     Ändra sshd.conf så att det finns en authorized keys fil som den läser ifrån som inte ligger i varje admins hemkatalog.
 
@@ -29,10 +28,14 @@ Skapa ett nätverksdiagram.
 
 Enable and control RDP to Windows Servers
 
+Read-only AD-konto för WP
+
+Randomize user password and write back to csv
+
+Create and link GPOs in script
+
+Security baselines
+
+Lock down SQL
+
 # Scripta Ubuntu Pro i setup-scriptet
-
-Recent versions of OpenSSH have made this much easier to accomplish!
-
-In /etc/ssh/sshd_config simply add the following:
-
-AuthenticationMethods "publickey,password" "publickey,keyboard-interactive"
