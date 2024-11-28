@@ -25,15 +25,15 @@ fi
 # Install dependencies
 msg_info "Installing dependencies"
 if ! (apt -qq update && DEBIAN_FRONTEND=noninteractive apt -qq install -y \
-    apache2 libapache2-mod-php php-mysql php-ldap curl); then
+    apache2 libapache2-mod-php php-mysql php-ldap); then
     msg_error "Failed to install dependencies"
     exit 1
 fi
 
 # Download and extract WordPress
-msg_info "Downloading and extracting WordPress"
+msg_info "Downloading WordPress"
 if ! wget -qO - https://wordpress.org/latest.tar.gz | tar -xz -C /var/www/; then
-    msg_error "Failed to download or extract WordPress"
+    msg_error "Failed to setup WordPress"
     exit 1
 fi
 
@@ -107,12 +107,14 @@ if ! systemctl restart apache2; then
     exit 1
 fi
 
-msg_info "WordPress installation completed successfully"
+msg_info "WordPress installation complete!"
 
-msg_info "Setting up WP-CLI"
-curl -O https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar
+msg_info "Setup WP-CLI"
+wget -q https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar
 
 chmod +x wp-cli.phar
 mv wp-cli.phar /usr/local/bin/wp
+
+wp --allow-root --path="/var/www/wordpress" plugin install next-active-directory-integration
 
 #wp --allow-root --path=/var/www/wordpress core install --url="www.labb.se" --admin_email="admin.labb.se" --title=Homepage --admin_user="$WP_ADMIN_USER" --admin_password="$WP_ADMIN_PASSWORD" --admin_email="admin@labb.se"

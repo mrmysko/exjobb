@@ -2,7 +2,7 @@
 
 ## Vilka är vi?
 
-<img src="./BrewIT_logo2.png" alt="drawing" width="200"/>
+<img src="./BrewIT_logo3.png" alt="drawing" width="200"/>
 
 BrewIT är ett nystartat företag grundat av två entusiaster med inriktning på att bygga IT-miljöer. Med bred kompetens inom serverhantering och nätverkslösningar levererar vi skräddarsydda, säkra och kostnadseffektiva lösningar som möter våra kunders behov.
 
@@ -47,64 +47,89 @@ De har förberett ett nytt kontor i Solna med tillräckligt utrymme för alla an
 
 ## Vår lösning
 
-Vi på BrewIT föreslår en lösning där vi använder de två befintliga fysiska servrarna för att dela upp dem i flera virtuella servrar. 
+För att optimera befintliga resurser och skapa en skalbar IT-miljö föreslår vi på BrewIT följande lösning:
 
-De användare som redan har en Linux-dator kan fortsätta använda sina datorer, men byter till centralt administrerade konton. Vi har en lösning för att ansluta datorer till företagets interna miljö.
+<ol>
+<li>Virtualisering av befintliga servrar:
 
-Genom att återbruka existerande utrustning håller vi kostnaderna nere.
+De två nuvarande fysiska servrarna kommer att virtualiseras, vilket möjliggör flera virtuella servrar på samma hårdvara. Detta maximerar nyttjandet av befintliga resurser och minskar behovet av nya investeringar.</li>
 
-Det måste införskaffas en brandvägg och ett ytterligare nätverkskort för att separera Webbservern från företagets interna miljö och från hot på internet.
+<li>Integration av Linux-klienter:
 
-Linuxklienterna behöver en Ubuntu Pro subscription licens. Det krävs för att centralt kunna administrera dem.
+Användare med Linux-datorer kan fortsätta arbeta med sina nuvarande enheter, men övergår till centralt administrerade användarkonton. Vi tillhandahåller en lösning för att ansluta Linux-datorerna till företagets interna nätverk för att förbättra säkerhet och kontroll.</li>
 
-Varje fysisk server kräver en Windows Server Standardlicens på grund av behovet av virtuella maskiner.
+<li>Förbättrad nätverkssäkerhet:
+
+För att skydda företagets interna miljö och webbservern mot externa hot införskaffas en dedikerad brandvägg och ett extra nätverkskort till webbservern. Dessa åtgärder kommer att säkerställa att den är logiskt åtskild från företagets övriga nätverk.</li>
+
+<li>Licenshantering för Linux-klienter:
+
+För att möjliggöra central administration av Linux-klienter behöver dessa utrustas med en Ubuntu Pro-prenumerationslicens, vilket även inkluderar säkerhets- och kompatibilitetsuppdateringar.</li>
+
+<li>Windows Server som host-OS och licenshantering:
+
+De fysiska servrarna kommer att använda Windows Server Standard som host-operativsystem. Valet av Windows motiveras av att några av de virtuella servrarna ändå kräver Windows-licens, och en standardlicens inkluderar licenser för dessa också; vilket gör detta till en kostnadseffektiv och praktisk lösning. 
+
+Utöver detta behöver varje klient som ansluter till Windows Server en **Client Access License (CAL)**, vilket säkerställer korrekt licensiering för klienternas åtkomst till servern.</li>
+
+Denna lösning kombinerar återbruk, kostnadseffektivitet och förbättrad säkerhet.
 
 ## Teknisk specifikation
 
-Antar DesignDreamers vår offert så får de:
+DesignDreamers erbjuds en säker och robust IT-miljö som omfattar två domänkontrollanter som kontinuerligt replikerar mellan varandra för att säkerställa hög tillgänglighet och felsäkerhet. Lösningen inkluderar också en databasserver för att hantera WordPress-data.
 
-En IT-miljö med två domän kontrollanter som replikerar mellan varandra för ökad felsäkerhet, samt en brandvägg för att motverka yttre hot från att ta sig in i företaget.
+Webbservern med WordPress är placerad i en DMZ (Demilitarized Zone) för att isolera den från företagets interna nätverk. För att komplettera säkerheten installeras en brandvägg för att motverka intrång och skydda hela företagets IT-miljö.
 
-Server 1 - OS: Windows Server X
-    <ul>
-    <li>VM1 - Domain Controller 1
-    <li>VM2 - Database
-    </ul>
+**Serverkonfiguration:**
+- **Server 1:**
+    - **Operativsystem:** Windows Server 2022 Standard
+    - **Virtuella maskiner:**
+        - **VM1:** Domänkontrollant 1 – Windows Server 2022 Standard
+        - **VM2:** Databasserver – Ubuntu Server 22.04 LTS
+- **Server 2:**
+    - **Operativsystem:** Windows Server 2022 Standard
+    - **Virtuella maskiner:**
+        - **VM1:** Domänkontrollant 2 – Windows Server 2022 Standard
+        - **VM2:** WordPress-server – Ubuntu Server 22.04 LTS
+    - **Extra:** Ett extra nätverkskort för DMZ-konfiguration
 
-Server 2 - OS: Windows Server X
-    <ul>
-    <li>VM1 - Domain Controller 2
-    <li>VM2 - WordPress
-    <li>Extra NIC for DMZ
-    </ul>
+- **Brandvägg:**
+    - **Modell:** "Modell tbd"
 
-Firewall - "Modell"
+**AD-Struktur:**
 
-De får också ett antal script för att hjälpa till att sätta upp de olika servrarna enligt en standardmall och utföra vissa funktioner; som att importera användare från en fördefinierad csv-fil och konfigurera Linux-klienter för att ansluta till domänen.
+Varje tier har dedikerade administratörskonton som är strikt isolerade från att logga in på resurser i andra tiers, vilket minskar risken för spridning av potentiella hot.
 
-Vi kommer också lämna över en teknisk dokumentation för hur miljön är konfigurerad. Så att de själva kan bygga vidare på miljön i framtiden.
+"Bild"
 
+- **Tier 0: Kritiska resurser**
+    - **Innehåll:** Domänkontrollanter och andra affärskritiska resurser.
+    **- Administratörsroller:** Tier 0-administratörer har fullständig kontroll över domänen och hanterar resurser som utgör kärnan i IT-miljön. Dessa konton har den högsta nivån av säkerhet och åtkomstbegränsningar.
 
+- **Tier 1: Applikations- och dataservrar**
+    - **Innehåll:** WordPress-servern och databasservern.
+    - **Administratörsroller:** Tier 1-administratörer hanterar specifikt dessa servrar, inklusive administration av applikationer, databaser och innehåll, utan åtkomst till Tier 0-resurser.
 
+- **Tier Base: Användare och klienter**
+    - **Innehåll:** Användarkonton och klientenheter (t.ex. datorer och mobila enheter).
+    - **Administratörsroller:** Administratörer i Tier Base ansvarar för användarhantering, inklusive grupptillhörighet, lösenordshantering samt skapande och borttagning av användarkonton. De har endast åtkomst till resurser och enheter i denna tier.
 
+**Wordpress:**
 
-Server 1: virtuella servrar: AD, databas
+WordPress-servern hanteras av Tier 1-administratörer, som har full tillgång till serverns operativsystem samt administratörsbehörighet inom WordPress-applikationen.
 
-Server 2: viruella servrar: AD, wordpress
-två nätverkskort så hemsidan hamnar på ett separat DMZ
+För att integrera WordPress med företagets Active Directory används tillägget Next Active Directory Integration.
 
-Linuxdatorer ansluter genom ett script som installerar och ansluter datorn till domänen.
-Program som används är: realmd, sssd, sssd-tools, libnss-sss, adcli, krb5-user, adsys.
+**Script:**
 
-Användare importeras med ett script från listan över anställda så alla får varsitt konto. Även särskilda konton för administration av miljön skapas.
+Vid överlämning tillhandahåller vi samtliga script som använts för att sätta upp servrar och klienter. 
 
-Strukturen i AD ser ut såhär: "bild"
+- Dessa inkluderar:
+    
+    - **Användarimport:**
+    Script för att importera användare från en fördefinierad CSV-fil direkt till Active Directory.
+    - **Linux-klientkonfiguration:** 
+    Script för att konfigurera Linux-klienter att ansluta till domänen med hjälp av realmd och sssd.
+    För Linux-klienter krävs en Ubuntu Pro-licens för att möjliggöra tillämpning av GPO:er från Active Directory.
 
-Företagsmail hanteras i Azure
-
-
-+. Design Dreamers har planer på att utöka sin miljö till att även omfatta Windows datorer, då nyanställda förväntas kunna hantera dessa lättare.
-
-Vi på BrewIT föreslår en lösning med två maskiner med virtuella servrar på, då är det möjligt att ha olika servrar med olika operativsystem och roller, till en lägre kostnad.
-
-Webbdesignsföretaget DesignDreamers är ett nystartat företag som bestämt sig för att "gå pro", för drt behöver de anställa ett antal personer och ha en strukturerad IT-miljö. De har tagit på sig ett uppdrag för att designa ett externt företags hemsida och 
+Utöver scripten lämnar vi också över en utförlig teknisk dokumentation som beskriver hur IT-miljön är konfigurerad. Dokumentationen fungerar som en guide för att förstå och underhålla infrastrukturen, och ger DesignDreamers möjlighet att bygga vidare på miljön och anpassa den efter framtida behov.

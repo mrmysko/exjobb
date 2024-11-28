@@ -34,6 +34,8 @@ Randomize user password and write back to csv
 
 Create and link GPOs in script
 
+NTP sync till DC
+
 Security baselines
 
 Lock down SQL
