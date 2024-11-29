@@ -1,0 +1,3 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Groups clsid="{3125E937-EB16-4b4c-9934-544FC6D24D26}"><Group clsid="{6D4A79E4-529C-4481-ABD0-F5BD7EA93BA7}" name="Administrators (built-in)" image="2" changed="2024-11-23 15:41:24" uid="{685D8F11-0439-484C-8130-5B23BAA83E74}" userContext="0" removePolicy="1"><Properties action="U" newName="" description="" deleteAllUsers="0" deleteAllGroups="0" removeAccounts="1" groupSid="S-1-5-32-544" groupName="Administrators (built-in)"><Members><Member name="LABB\T1_Admins" action="ADD" sid="S-1-5-21-1247346845-1944370921-3698593638-2103"/></Members></Properties></Group>
+</Groups>
