@@ -46,9 +46,6 @@ os-version = $VERSION
 
 EOF
 
-#[users]
-#default-home = /home/%d/%u
-
 msg_info "Joining domain."
 if ! realm join -U "$DOMAIN_USER" "$DOMAIN"; then
     msg_error "Failed to join domain"

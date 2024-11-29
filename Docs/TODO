@@ -41,3 +41,7 @@ Security baselines
 Lock down SQL
 
 # Scripta Ubuntu Pro i setup-scriptet
+
+Ta bort brandvägg från förstudie
+Lägg till deras router i nuläge
+Lägg till brandväggsregler för miljön
