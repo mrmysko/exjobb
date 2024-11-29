@@ -2,7 +2,7 @@
 
 ## Vilka är vi?
 
-<img src="./BrewIT_logo3.png" alt="drawing" width="200"/>
+<img src="./BrewIT.png" alt="drawing" width="200"/>
 
 BrewIT är ett nystartat företag grundat av två entusiaster med inriktning på att bygga IT-miljöer. Med bred kompetens inom serverhantering och nätverkslösningar levererar vi skräddarsydda, säkra och kostnadseffektiva lösningar som möter våra kunders behov.
 
@@ -68,7 +68,7 @@ För att möjliggöra central administration av Linux-klienter behöver dessa ut
 
 <li>Windows Server som host-OS och licenshantering:
 
-De fysiska servrarna kommer att använda Windows Server Standard som host-operativsystem. Valet av Windows motiveras av att några av de virtuella servrarna ändå kräver Windows-licens, och en standardlicens inkluderar licenser för dessa också; vilket gör detta till en kostnadseffektiv och praktisk lösning. 
+De fysiska servrarna kommer att använda Windows Server Standard som host-operativsystem. Valet av Windows motiveras av att några av de virtuella servrarna ändå kräver Windows-licens, och en standardlicens inkluderar licenser för dessa också; vilket gör detta till en kostnadseffektiv och praktisk lösning.
 
 Utöver detta behöver varje klient som ansluter till Windows Server en **Client Access License (CAL)**, vilket säkerställer korrekt licensiering för klienternas åtkomst till servern.</li>
 
@@ -81,20 +81,21 @@ DesignDreamers erbjuds en säker och robust IT-miljö som omfattar två domänko
 Webbservern med WordPress är placerad i en DMZ (Demilitarized Zone) för att isolera den från företagets interna nätverk. För att komplettera säkerheten installeras en brandvägg för att motverka intrång och skydda hela företagets IT-miljö.
 
 **Serverkonfiguration:**
+
 - **Server 1:**
-    - **Operativsystem:** Windows Server 2022 Standard
-    - **Virtuella maskiner:**
-        - **VM1:** Domänkontrollant 1 – Windows Server 2022 Standard
-        - **VM2:** Databasserver – Ubuntu Server 22.04 LTS
+  - **Operativsystem:** Windows Server 2022 Standard
+  - **Virtuella maskiner:**
+    - **VM1:** Domänkontrollant 1 – Windows Server 2022 Standard
+    - **VM2:** Databasserver – Ubuntu Server 22.04 LTS
 - **Server 2:**
-    - **Operativsystem:** Windows Server 2022 Standard
-    - **Virtuella maskiner:**
-        - **VM1:** Domänkontrollant 2 – Windows Server 2022 Standard
-        - **VM2:** WordPress-server – Ubuntu Server 22.04 LTS
-    - **Extra:** Ett extra nätverkskort för DMZ-konfiguration
+  - **Operativsystem:** Windows Server 2022 Standard
+  - **Virtuella maskiner:**
+    - **VM1:** Domänkontrollant 2 – Windows Server 2022 Standard
+    - **VM2:** WordPress-server – Ubuntu Server 22.04 LTS
+  - **Extra:** Ett extra nätverkskort för DMZ-konfiguration
 
 - **Brandvägg:**
-    - **Modell:** "Modell tbd"
+  - **Modell:** "Modell tbd"
 
 **AD-Struktur:**
 
@@ -103,16 +104,16 @@ Varje tier har dedikerade administratörskonton som är strikt isolerade från a
 "Bild"
 
 - **Tier 0: Kritiska resurser**
-    - **Innehåll:** Domänkontrollanter och andra affärskritiska resurser.
+  - **Innehåll:** Domänkontrollanter och andra affärskritiska resurser.
     **- Administratörsroller:** Tier 0-administratörer har fullständig kontroll över domänen och hanterar resurser som utgör kärnan i IT-miljön. Dessa konton har den högsta nivån av säkerhet och åtkomstbegränsningar.
 
 - **Tier 1: Applikations- och dataservrar**
-    - **Innehåll:** WordPress-servern och databasservern.
-    - **Administratörsroller:** Tier 1-administratörer hanterar specifikt dessa servrar, inklusive administration av applikationer, databaser och innehåll, utan åtkomst till Tier 0-resurser.
+  - **Innehåll:** WordPress-servern och databasservern.
+  - **Administratörsroller:** Tier 1-administratörer hanterar specifikt dessa servrar, inklusive administration av applikationer, databaser och innehåll, utan åtkomst till Tier 0-resurser.
 
 - **Tier Base: Användare och klienter**
-    - **Innehåll:** Användarkonton och klientenheter (t.ex. datorer och mobila enheter).
-    - **Administratörsroller:** Administratörer i Tier Base ansvarar för användarhantering, inklusive grupptillhörighet, lösenordshantering samt skapande och borttagning av användarkonton. De har endast åtkomst till resurser och enheter i denna tier.
+  - **Innehåll:** Användarkonton och klientenheter (t.ex. datorer och mobila enheter).
+  - **Administratörsroller:** Administratörer i Tier Base ansvarar för användarhantering, inklusive grupptillhörighet, lösenordshantering samt skapande och borttagning av användarkonton. De har endast åtkomst till resurser och enheter i denna tier.
 
 **Wordpress:**
 
@@ -122,13 +123,13 @@ För att integrera WordPress med företagets Active Directory används tillägge
 
 **Script:**
 
-Vid överlämning tillhandahåller vi samtliga script som använts för att sätta upp servrar och klienter. 
+Vid överlämning tillhandahåller vi samtliga script som använts för att sätta upp servrar och klienter.
 
 - Dessa inkluderar:
-    
-    - **Användarimport:**
+
+  - **Användarimport:**
     Script för att importera användare från en fördefinierad CSV-fil direkt till Active Directory.
-    - **Linux-klientkonfiguration:** 
+  - **Linux-klientkonfiguration:**
     Script för att konfigurera Linux-klienter att ansluta till domänen med hjälp av realmd och sssd.
     För Linux-klienter krävs en Ubuntu Pro-licens för att möjliggöra tillämpning av GPO:er från Active Directory.
 

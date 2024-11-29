@@ -10,3 +10,5 @@
 adcli - Perform actions in Active Directory
 
 wbinfo - Winbind query tool.
+
+(Windows) setspn - Reads, modifies, and deletes the Service Principal Names (SPN) directory property for an Active Directory service account.
