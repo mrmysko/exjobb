@@ -46,6 +46,34 @@ os-version = $VERSION
 
 EOF
 
+msg_info "Configuring NTP synchronization with Windows time server"
+if ! (systemctl stop systemd-timesyncd &&
+    systemctl disable systemd-timesyncd &&
+    DEBIAN_FRONTEND=noninteractive apt -qq install -y chrony); then
+    msg_error "Failed to install chrony"
+    exit 1
+fi
+
+cat <<EOF >/etc/chrony/chrony.conf
+# Use Windows time server as primary
+server time.windows.com iburst
+
+# Record the rate at which the system clock gains/loses time
+driftfile /var/lib/chrony/drift
+
+# Allow the system clock to be stepped in the first three updates
+makestep 1.0 3
+
+# Enable kernel synchronization of the real-time clock (RTC)
+rtcsync
+EOF
+
+if ! (systemctl restart chrony &&
+    systemctl enable chrony); then
+    msg_error "Failed to start chrony service"
+    exit 1
+fi
+
 msg_info "Joining domain."
 if ! realm join -U "$DOMAIN_USER" "$DOMAIN"; then
     msg_error "Failed to join domain"
@@ -54,10 +82,6 @@ if ! realm join -U "$DOMAIN_USER" "$DOMAIN"; then
 else
     msg_info "Successfully joined domain $DOMAIN"
 fi
-
-#msg_info "Changing sssd conf"
-#sed -i 's/use_fully_qualified_names = .*/use_fully_qualified_names = False/' /etc/sssd/sssd.conf
-#systemctl restart sssd
 
 msg_info "Enabling pam_mkhomedir"
 pam-auth-update --enable mkhomedir
