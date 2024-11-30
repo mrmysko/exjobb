@@ -64,72 +64,42 @@ function Copy-AdminTemplates {
         [string]$TempPath
     )
     
-    if ([string]::IsNullOrWhiteSpace($TempPath)) {
-        throw "TempPath parameter cannot be null or empty"
-    }
-    
     try {
-        Write-Host "Attempting to copy admin templates from: $TempPath"
-        
-        # Validate temp path
-        if (-not (Test-Path $TempPath)) {
-            throw "Temporary path does not exist: $TempPath"
-        }
-
-        # Get SYSVOL path from domain
+        # Get SYSVOL path
         $domain = Get-ADDomain
         $sysvolPath = $domain.SysvolPath
         $policyDefsPath = Join-Path $sysvolPath "Policies\PolicyDefinitions"
         $languagePath = Join-Path $policyDefsPath "en-US"
         
-        Write-Host "PolicyDefinitions path: $policyDefsPath"
-        Write-Host "Language path: $languagePath"
-        
         # Create directories if they don't exist
         if (-not (Test-Path $policyDefsPath)) {
             New-Item -ItemType Directory -Path $policyDefsPath -Force | Out-Null
-            Write-Host "Created PolicyDefinitions directory: $policyDefsPath"
         }
         if (-not (Test-Path $languagePath)) {
             New-Item -ItemType Directory -Path $languagePath -Force | Out-Null
-            Write-Host "Created language directory: $languagePath"
         }
         
-        # Search for ADMX file
-        Write-Host "Searching for ADMX file in $TempPath"
-        $admxFiles = Get-ChildItem -Path $TempPath -Filter "Ubuntu-all.admx" -Recurse -ErrorAction Stop
-        $admxFile = $admxFiles | Select-Object -First 1
+        # Set source paths (in GPOs directory)
+        $gposPath = Join-Path $TempPath "GPOs"
+        $admxSource = Join-Path $gposPath "Ubuntu-all.admx"
+        $admlSource = Join-Path $gposPath "Ubuntu-all.adml"
         
-        if ($admxFile) {
-            Write-Host "Found ADMX file: $($admxFile.FullName)"
-            Copy-Item -Path $admxFile.FullName -Destination $policyDefsPath -Force
+        # Copy ADMX file
+        if (Test-Path $admxSource) {
+            Copy-Item -Path $admxSource -Destination $policyDefsPath -Force
             Write-Host "Copied Ubuntu-all.admx to $policyDefsPath"
         }
         else {
-            Write-Warning "Ubuntu-all.admx not found in path: $TempPath"
+            Write-Error "Ubuntu-all.admx not found in $gposPath"
         }
         
-        # Search for ADML file
-        Write-Host "Searching for ADML file in $TempPath"
-        $admlFiles = Get-ChildItem -Path $TempPath -Filter "Ubuntu-all.adml" -Recurse -ErrorAction Stop
-        $admlFile = $admlFiles | Select-Object -First 1
-        
-        if ($admlFile) {
-            Write-Host "Found ADML file: $($admlFile.FullName)"
-            Copy-Item -Path $admlFile.FullName -Destination $languagePath -Force
+        # Copy ADML file
+        if (Test-Path $admlSource) {
+            Copy-Item -Path $admlSource -Destination $languagePath -Force
             Write-Host "Copied Ubuntu-all.adml to $languagePath"
         }
         else {
-            Write-Warning "Ubuntu-all.adml not found in path: $TempPath"
-        }
-        
-        # Verify files were copied successfully
-        if ((Test-Path (Join-Path $policyDefsPath "Ubuntu-all.admx")) -and 
-            (Test-Path (Join-Path $languagePath "Ubuntu-all.adml"))) {
-            Write-Host "Successfully copied both ADMX and ADML files"
-        }
-        else {
-            Write-Warning "One or both template files may not have been copied successfully"
+            Write-Error "Ubuntu-all.adml not found in $gposPath"
         }
     }
     catch {
@@ -152,34 +122,15 @@ function Import-AndLinkGPOs {
     $tempPath = Join-Path $env:TEMP "GPOImport_$(Get-Random)"
     
     try {
-        # Create temporary directory
-        if (-not (Test-Path $tempPath)) {
-            New-Item -ItemType Directory -Path $tempPath -Force | Out-Null
-            Write-Host "Created temporary directory: $tempPath"
-        }
+        # Create temporary directory and extract ZIP
+        New-Item -ItemType Directory -Path $tempPath -Force | Out-Null
+        Write-Host "Created temporary directory: $tempPath"
         
-        # Validate zip file exists
-        if (-not (Test-Path $ZipFile)) {
-            throw "GPO zip file not found: $ZipFile"
-        }
-        
-        # Extract the ZIP file
-        Write-Host "Extracting $ZipFile to $tempPath"
         Expand-Archive -Path $ZipFile -DestinationPath $tempPath -Force
+        Write-Host "Extracted $ZipFile to $tempPath"
         
-        # Ensure extraction was successful
-        if (-not (Test-Path $tempPath)) {
-            throw "Failed to extract ZIP file to temporary directory"
-        }
-        
-        # Copy admin templates
-        if (Test-Path $tempPath) {
-            Write-Host "Copying administrative templates from $tempPath"
-            Copy-AdminTemplates -TempPath $tempPath
-        }
-        else {
-            throw "Temporary path not found after extraction: $tempPath"
-        }
+        # Copy admin templates first
+        Copy-AdminTemplates -TempPath $tempPath
         
         # Process GPOs
         $gpoDirectories = Get-ChildItem -Path $tempPath -Directory | 
@@ -192,7 +143,6 @@ function Import-AndLinkGPOs {
             Write-Host "Processing GPO: $gpoName from $gpoPath"
             
             try {
-                Write-Host "Importing GPO backup from: $gpoPath"
                 $gpo = Import-GPO -BackupGpoName $gpoName -TargetName $gpoName -Path $gpoPath -CreateIfNeeded
                 Write-Host "Successfully imported GPO: $gpoName"
                 
