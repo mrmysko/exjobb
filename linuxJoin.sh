@@ -46,33 +46,22 @@ os-version = $VERSION
 
 EOF
 
-msg_info "Configuring NTP synchronization with Windows time server"
-if ! (systemctl stop systemd-timesyncd &&
-    systemctl disable systemd-timesyncd &&
-    DEBIAN_FRONTEND=noninteractive apt -qq install -y chrony); then
-    msg_error "Failed to install chrony"
+msg_info "Setting timezone"
+if ! timedatectl set-timezone Europe/Stockholm; then
+    msg_error "Failed to set timezone"
     exit 1
 fi
 
-cat <<EOF >/etc/chrony/chrony.conf
-# Use Windows time server as primary
-server time.windows.com iburst
+msg_info "Configuring NTP"
+sudo mkdir -p /etc/systemd/timesyncd.conf.d
 
-# Record the rate at which the system clock gains/loses time
-driftfile /var/lib/chrony/drift
+sudo tee /etc/systemd/timesyncd.conf.d/windows-time.conf >/dev/null <<EOL
+[Time]
+NTP=time.windows.com
+FallbackNTP=ntp.ubuntu.com
+EOL
 
-# Allow the system clock to be stepped in the first three updates
-makestep 1.0 3
-
-# Enable kernel synchronization of the real-time clock (RTC)
-rtcsync
-EOF
-
-if ! (systemctl restart chrony &&
-    systemctl enable chrony); then
-    msg_error "Failed to start chrony service"
-    exit 1
-fi
+sudo systemctl restart systemd-timesyncd
 
 msg_info "Joining domain."
 if ! realm join -U "$DOMAIN_USER" "$DOMAIN"; then
