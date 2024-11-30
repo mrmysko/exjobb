@@ -59,46 +59,72 @@ function Create-AdminGroup {
 
 function Copy-AdminTemplates {
     param(
+        [Parameter(Mandatory = $true)]
         [string]$TempPath
     )
     
     try {
+        # Validate temp path
+        if (-not (Test-Path $TempPath)) {
+            Write-Error "Temporary path does not exist: $TempPath"
+            return
+        }
+
         # Get SYSVOL path from domain
         $domain = Get-ADDomain
         $sysvolPath = $domain.SysvolPath
         $policyDefsPath = Join-Path $sysvolPath "Policies\PolicyDefinitions"
         $languagePath = Join-Path $policyDefsPath "en-US"
         
+        Write-Host "PolicyDefinitions path: $policyDefsPath"
+        Write-Host "Language path: $languagePath"
+        
         # Create directories if they don't exist
         if (-not (Test-Path $policyDefsPath)) {
             New-Item -ItemType Directory -Path $policyDefsPath -Force | Out-Null
+            Write-Host "Created PolicyDefinitions directory: $policyDefsPath"
         }
         if (-not (Test-Path $languagePath)) {
             New-Item -ItemType Directory -Path $languagePath -Force | Out-Null
+            Write-Host "Created language directory: $languagePath"
         }
         
-        # Look for and copy ADMX file
-        $admxFile = Get-ChildItem -Path $TempPath -Filter "Ubuntu-all.admx" -Recurse | Select-Object -First 1
+        # Search for ADMX file with more detailed error handling
+        Write-Host "Searching for ADMX file in $TempPath"
+        $admxFile = Get-ChildItem -Path $TempPath -Filter "Ubuntu-all.admx" -Recurse -ErrorAction Stop | Select-Object -First 1
         if ($admxFile) {
+            Write-Host "Found ADMX file: $($admxFile.FullName)"
             Copy-Item -Path $admxFile.FullName -Destination $policyDefsPath -Force
             Write-Host "Copied Ubuntu-all.admx to $policyDefsPath"
         }
         else {
-            Write-Warning "Ubuntu-all.admx not found in the ZIP file"
+            Write-Warning "Ubuntu-all.admx not found in path: $TempPath"
         }
         
-        # Look for and copy ADML file
-        $admlFile = Get-ChildItem -Path $TempPath -Filter "Ubuntu-all.adml" -Recurse | Select-Object -First 1
+        # Search for ADML file with more detailed error handling
+        Write-Host "Searching for ADML file in $TempPath"
+        $admlFile = Get-ChildItem -Path $TempPath -Filter "Ubuntu-all.adml" -Recurse -ErrorAction Stop | Select-Object -First 1
         if ($admlFile) {
+            Write-Host "Found ADML file: $($admlFile.FullName)"
             Copy-Item -Path $admlFile.FullName -Destination $languagePath -Force
             Write-Host "Copied Ubuntu-all.adml to $languagePath"
         }
         else {
-            Write-Warning "Ubuntu-all.adml not found in the ZIP file"
+            Write-Warning "Ubuntu-all.adml not found in path: $TempPath"
+        }
+        
+        # Verify files were copied successfully
+        if ((Test-Path (Join-Path $policyDefsPath "Ubuntu-all.admx")) -and 
+            (Test-Path (Join-Path $languagePath "Ubuntu-all.adml"))) {
+            Write-Host "Successfully copied both ADMX and ADML files"
+        }
+        else {
+            Write-Warning "One or both template files may not have been copied successfully"
         }
     }
     catch {
         Write-Error ("Error copying admin templates - {0}" -f $_)
+        throw  # Re-throw the error to be handled by the calling function
     }
 }
 
@@ -112,11 +138,14 @@ function Import-AndLinkGPOs {
         # Create a temporary directory for GPO extraction
         $tempPath = Join-Path $env:TEMP "GPOImport_$(Get-Random)"
         New-Item -ItemType Directory -Path $tempPath -Force | Out-Null
+        Write-Host "Created temporary directory: $tempPath"
         
         # Extract the ZIP file
+        Write-Host "Extracting $ZipFile to $tempPath"
         Expand-Archive -Path $ZipFile -DestinationPath $tempPath -Force
         
-        # Copy ADMX/ADML files first
+        # Copy ADMX/ADML files first with explicit path
+        Write-Host "Copying administrative templates..."
         Copy-AdminTemplates -TempPath $tempPath
         
         # Process each GPO directory
@@ -124,10 +153,23 @@ function Import-AndLinkGPOs {
             $gpoName = $_.Name
             $gpoPath = $_.FullName
             
+            # Skip if it's not a GPO directory (e.g., if it's an admin template directory)
+            if (-not (Test-Path (Join-Path $gpoPath "Backup.xml"))) {
+                Write-Host "Skipping non-GPO directory: $gpoName"
+                return
+            }
+            
             Write-Host "Processing GPO: $gpoName"
             
             # Import GPO
-            $gpo = Import-GPO -BackupGpoName $gpoName -TargetName $gpoName -Path $gpoPath -CreateIfNeeded
+            try {
+                $gpo = Import-GPO -BackupGpoName $gpoName -TargetName $gpoName -Path $gpoPath -CreateIfNeeded
+                Write-Host "Successfully imported GPO: $gpoName"
+            }
+            catch {
+                Write-Error "Failed to import GPO $gpoName - $_"
+                return
+            }
             
             # Determine target OU based on GPO name
             $targetOU = $null
@@ -137,26 +179,33 @@ function Import-AndLinkGPOs {
                 '^T(\d+)\sSudo\sRights$' {
                     $tierNum = $matches[1]
                     $targetOU = $OUPaths["Tier${tierNum}LinuxServers"]
+                    Write-Host "Matched Tier $tierNum Linux GPO pattern"
                 }
                 
                 # Tier-specific Server GPOs
                 '^T(\d+)\sServers\s' {
                     $tierNum = $matches[1]
                     $targetOU = $OUPaths["Tier${tierNum}Servers"]
+                    Write-Host "Matched Tier $tierNum Servers GPO pattern"
                 }
                 
                 # Base Tier Linux GPOs
                 '^Base\sSudo\sRights$' {
                     $targetOU = $OUPaths["BaseLinux"]
+                    Write-Host "Matched Base Linux GPO pattern"
                 }
-                
-                # Add more patterns as needed
             }
             
             # Link GPO if target OU was found
             if ($targetOU) {
                 Write-Host "Linking GPO '$gpoName' to OU: $targetOU"
-                New-GPLink -Name $gpoName -Target $targetOU -ErrorAction SilentlyContinue
+                try {
+                    New-GPLink -Name $gpoName -Target $targetOU -ErrorAction Stop
+                    Write-Host "Successfully linked GPO '$gpoName' to OU: $targetOU"
+                }
+                catch {
+                    Write-Error "Failed to link GPO $gpoName to $targetOU - $_"
+                }
             }
             else {
                 Write-Warning "No matching OU found for GPO: $gpoName"
@@ -165,11 +214,13 @@ function Import-AndLinkGPOs {
     }
     catch {
         Write-Error ("Error processing GPOs - {0}" -f $_)
+        throw
     }
     finally {
         # Cleanup
         if (Test-Path $tempPath) {
             Remove-Item -Path $tempPath -Recurse -Force
+            Write-Host "Cleaned up temporary directory: $tempPath"
         }
     }
 }
