@@ -2,11 +2,11 @@ param(
     [Parameter(Mandatory = $true)]
     [int]$NumberOfTiers,
     
-    [Parameter(Mandatory = $true)]
-    [bool]$EnableDeleteProtection,
+    [Parameter(Mandatory = $false)]
+    [switch]$DisableDeleteProtection,
     
     [Parameter(Mandatory = $false)]
-    [bool]$ImportGPOs = $false,
+    [switch]$SkipGPO,
     
     [Parameter(Mandatory = $false)]
     [string]$GpoZipPath = ".\GPOs.zip",
@@ -14,6 +14,10 @@ param(
     [Parameter(Mandatory = $false)]
     [string]$TempExtractPath = ".\GPOsTemp"
 )
+
+# Convert switches to booleans for internal use
+$EnableDeleteProtection = -not $DisableDeleteProtection
+$ImportGPOs = -not $SkipGPO
 
 Import-Module ActiveDirectory
 Import-Module GroupPolicy
@@ -70,23 +74,41 @@ function Update-UserRightsAssignment {
     )
     
     try {
+        # Get the GPO's ID GUID
+        $gpo = Get-GPO -Name $GpoName
+        $gpoId = $gpo.Id.Guid
+        
+        # Get path to GPO security settings
+        $gpoPath = "\\$domainName\SYSVOL\$domainName\Policies\{$gpoId}\Machine\Microsoft\Windows NT\SecEdit"
+        
+        # Create the SecEdit working directory if it doesn't exist
+        if (-not (Test-Path $gpoPath)) {
+            New-Item -Path $gpoPath -ItemType Directory -Force | Out-Null
+        }
+        
         # Get SIDs for all groups
-        $sids = @()
+        $sidList = @()
         foreach ($group in $Groups) {
             $adGroup = Get-ADGroup -Identity $group -ErrorAction Stop
-            $sids += $adGroup.SID.Value
+            $sidList += $adGroup.SID.Value
             Write-Host "Found SID for group $group : $($adGroup.SID.Value)"
         }
         
-        # Combine SIDs into the format expected by user rights assignment
-        $sidString = "*$($sids -join "*")*"
+        # Create the security template
+        $infFile = Join-Path $gpoPath "gpttmpl.inf"
+        $securitySettings = @"
+[Unicode]
+Unicode=yes
+[Version]
+signature="`$CHICAGO`$"
+Revision=1
+[Privilege Rights]
+$UserRight = $($sidList -join ',')
+"@
         
-        # Update the user right in the GPO
-        Set-GPRegistryValue -Name $GpoName `
-            -Key "Machine\System\CurrentControlSet\Control\Lsa\UserRights" `
-            -ValueName $UserRight `
-            -Type MultiString `
-            -Value $sidString
+        # Save the security template
+        $securitySettings | Out-File -FilePath $infFile -Encoding unicode -Force
+        Write-Host "Created security template for $UserRight in GPO: $GpoName"
         
         Write-Host "Updated $UserRight in GPO $GpoName with groups: $($Groups -join ', ')"
     }
@@ -112,10 +134,41 @@ function Update-GpoSecuritySettings {
             'SeDenyRemoteInteractiveLogonRight' = 'Deny log on through Remote Desktop Services'
         }
         
-        # Update each user right
-        foreach ($right in $userRights.Keys) {
-            Update-UserRightsAssignment -GpoName $GpoName -UserRight $right -Groups $DenyLogonGroups
+        # Collect all settings into one security template
+        $gpo = Get-GPO -Name $GpoName
+        $gpoId = $gpo.Id.Guid
+        $gpoPath = "\\$domainName\SYSVOL\$domainName\Policies\{$gpoId}\Machine\Microsoft\Windows NT\SecEdit"
+        
+        # Create the SecEdit working directory if it doesn't exist
+        if (-not (Test-Path $gpoPath)) {
+            New-Item -Path $gpoPath -ItemType Directory -Force | Out-Null
         }
+        
+        # Get SIDs for all groups
+        $sidList = @()
+        foreach ($group in $DenyLogonGroups) {
+            $adGroup = Get-ADGroup -Identity $group -ErrorAction Stop
+            $sidList += $adGroup.SID.Value
+        }
+        $sids = $sidList -join ','
+        
+        # Create the security template content
+        $infContent = @"
+[Unicode]
+Unicode=yes
+[Version]
+signature="`$CHICAGO`$"
+Revision=1
+[Privilege Rights]
+SeDenyBatchLogonRight = $sids
+SeDenyServiceLogonRight = $sids
+SeDenyInteractiveLogonRight = $sids
+SeDenyRemoteInteractiveLogonRight = $sids
+"@
+        
+        # Save the template
+        $infFile = Join-Path $gpoPath "gpttmpl.inf"
+        $infContent | Out-File -FilePath $infFile -Encoding unicode -Force
         
         Write-Host "Completed security settings update for GPO: $GpoName"
     }
@@ -293,12 +346,12 @@ try {
         Write-Host "`nGPO import and configuration completed successfully!"
     }
     else {
-        Write-Host "`nSkipping GPO import (use -ImportGPOs `$true to import GPOs)"
+        Write-Host "`nSkipping GPO import (use -ImportGPOs to import GPOs)"
     }
     #endregion
 
     Write-Host "`nComplete AD structure setup finished!"
-    Write-Host "Delete Protection is set to: $EnableDeleteProtection"
+    Write-Host "Delete Protection is set to: $(-not $DisableDeleteProtection)"
     if ($ImportGPOs) {
         Write-Host "GPOs were imported and configured"
     }
