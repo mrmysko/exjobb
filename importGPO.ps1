@@ -51,7 +51,7 @@ function Deploy-GPOFiles {
     
     # Import GPOs
     Write-Host "`nSearching for GPO backups..." -ForegroundColor Cyan
-    $gpoBackups = Get-ChildItem -Path $tempDir -Directory | Where-Object {
+    $gpoBackups = Get-ChildItem -Path $tempDir -Directory -Recurse | Where-Object {
         $xmlPath = Join-Path $_.FullName "Backup.xml"
         $hasBackupXml = Test-Path $xmlPath
         if ($hasBackupXml) {
@@ -63,57 +63,19 @@ function Deploy-GPOFiles {
     if ($gpoBackups) {
         Write-Host "`nFound GPO backups to import:" -ForegroundColor Cyan
         foreach ($gpoBackup in $gpoBackups) {
-            $backupXmlPath = Join-Path $gpoBackup.FullName "Backup.xml"
-            Write-Host "`nProcessing backup XML: $backupXmlPath" -ForegroundColor Yellow
-            
             try {
-                # Load and validate the backup XML
-                $backupXml = [xml](Get-Content $backupXmlPath -ErrorAction Stop)
-                Write-Host "Successfully loaded XML file" -ForegroundColor Green
+                # Get the backup directory name (GUID)
+                $backupId = $gpoBackup.Name
+                Write-Host "`nProcessing GPO backup directory: $backupId" -ForegroundColor Yellow
                 
-                if ($null -eq $backupXml.BackupInst) {
-                    Write-Warning "Invalid XML structure - missing BackupInst node"
-                    Write-Host "XML Content:" -ForegroundColor Yellow
-                    Get-Content $backupXmlPath | Write-Host
-                    continue
-                }
-
-                if ($null -eq $backupXml.BackupInst.GPODisplayName) {
-                    Write-Warning "GPO Display Name is null in $($gpoBackup.Name)"
-                    Write-Host "XML Content:" -ForegroundColor Yellow
-                    Get-Content $backupXmlPath | Write-Host
-                    continue
-                }
-                
-                $gpoName = $backupXml.BackupInst.GPODisplayName.Trim()
-                if ([string]::IsNullOrWhiteSpace($gpoName)) {
-                    Write-Warning "GPO Name is empty in $($gpoBackup.Name)"
-                    continue
-                }
-                
-                Write-Host "Importing GPO: $gpoName (From directory: $($gpoBackup.Name))" -ForegroundColor Cyan
-                
-                # Get backup ID from XML
-                $backupId = $backupXml.BackupInst.ID
-                if ([string]::IsNullOrWhiteSpace($backupId)) {
-                    Write-Warning "Backup ID is missing in $($gpoBackup.Name)"
-                    continue
-                }
-
-                # Attempt the import with full path information
-                Import-GPO -BackupId $backupId -TargetName $gpoName -Path $gpoBackup.Parent.FullName -CreateIfNeeded
-                Write-Host "Successfully imported GPO: $gpoName" -ForegroundColor Green
+                # Import the GPO using directory name as backup ID
+                Import-GPO -BackupId $backupId -Path $gpoBackup.Parent.FullName -TargetName "Imported_$backupId" -CreateIfNeeded
+                Write-Host "Successfully imported GPO with ID: $backupId" -ForegroundColor Green
             }
             catch {
                 Write-Warning "Failed processing GPO backup in directory $($gpoBackup.Name)"
                 Write-Warning "Error: $_"
                 Write-Host "Full backup path: $($gpoBackup.FullName)" -ForegroundColor Yellow
-                
-                # Try to display XML content for debugging
-                if (Test-Path $backupXmlPath) {
-                    Write-Host "Backup.xml content:" -ForegroundColor Yellow
-                    Get-Content $backupXmlPath | Write-Host
-                }
             }
         }
     }
