@@ -2,8 +2,8 @@ param(
     [Parameter(Mandatory = $true)]
     [int]$NumberOfTiers,
     
-    [Parameter(Mandatory = $true)]
-    [bool]$EnableDeleteProtection
+    [Parameter()]
+    [switch]$RemoveDeleteProtection
 )
 
 Import-Module ActiveDirectory
@@ -17,12 +17,12 @@ function Create-OUIfNotExists {
     try {
         $ouExists = Get-ADOrganizationalUnit -Filter "Name -eq '$Name'" -SearchBase $Path -SearchScope OneLevel
         if (-not $ouExists) {
-            New-ADOrganizationalUnit -Name $Name -Path $Path -ProtectedFromAccidentalDeletion $EnableDeleteProtection
-            Write-Host "Created OU: $Name in $Path (Delete Protection: $EnableDeleteProtection)"
+            New-ADOrganizationalUnit -Name $Name -Path $Path -ProtectedFromAccidentalDeletion (-not $RemoveDeleteProtection)
+            Write-Host "Created OU: $Name in $Path (Delete Protection: $(-not $RemoveDeleteProtection))"
         }
         else {
-            Set-ADOrganizationalUnit -Identity "OU=$Name,$Path" -ProtectedFromAccidentalDeletion $EnableDeleteProtection
-            Write-Host "OU already exists: $Name in $Path (Updated Delete Protection: $EnableDeleteProtection)"
+            Set-ADOrganizationalUnit -Identity "OU=$Name,$Path" -ProtectedFromAccidentalDeletion (-not $RemoveDeleteProtection)
+            Write-Host "OU already exists: $Name in $Path (Updated Delete Protection: $(-not $RemoveDeleteProtection))"
         }
     }
     catch {
@@ -77,7 +77,7 @@ try {
     Create-OUIfNotExists -Name "Tier Base" -Path $adminPath
     $baseAdminPath = "OU=Tier Base,$adminPath"
     Create-OUIfNotExists -Name "Groups" -Path $baseAdminPath
-    Create-OUIfNotExists -Name "Admins" -Path $baseAdminPath  # Changed from "Tier Base Admins"
+    Create-OUIfNotExists -Name "Admins" -Path $baseAdminPath
     Create-AdminGroup -Name "TB_Admins" -Path "OU=Groups,$baseAdminPath"
     
     # Create other tiers under Admin OU
@@ -100,7 +100,7 @@ try {
     }
     
     Write-Host "`nOU structure creation completed successfully!"
-    Write-Host "Delete Protection is set to: $EnableDeleteProtection"
+    Write-Host "Delete Protection is set to: $(-not $RemoveDeleteProtection)"
 }
 catch {
     Write-Error ("An error occurred during OU structure creation - {0}" -f $_)
