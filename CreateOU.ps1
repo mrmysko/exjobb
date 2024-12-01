@@ -3,11 +3,22 @@ param(
     [int]$NumberOfTiers,
     
     [Parameter(Mandatory = $true)]
-    [bool]$EnableDeleteProtection
+    [bool]$EnableDeleteProtection,
+    
+    [Parameter(Mandatory = $false)]
+    [bool]$ImportGPOs = $false,
+    
+    [Parameter(Mandatory = $false)]
+    [string]$GpoZipPath = ".\GPOs.zip",
+    
+    [Parameter(Mandatory = $false)]
+    [string]$TempExtractPath = ".\GPOsTemp"
 )
 
 Import-Module ActiveDirectory
+Import-Module GroupPolicy
 
+#region Helper Functions
 function Create-OUIfNotExists {
     param(
         [string]$Name,
@@ -51,12 +62,79 @@ function Create-AdminGroup {
     }
 }
 
+function Update-UserRightsAssignment {
+    param(
+        [string]$GpoName,
+        [string]$UserRight,
+        [string[]]$Groups
+    )
+    
+    try {
+        # Get SIDs for all groups
+        $sids = @()
+        foreach ($group in $Groups) {
+            $adGroup = Get-ADGroup -Identity $group -ErrorAction Stop
+            $sids += $adGroup.SID.Value
+            Write-Host "Found SID for group $group : $($adGroup.SID.Value)"
+        }
+        
+        # Combine SIDs into the format expected by user rights assignment
+        $sidString = "*$($sids -join "*")*"
+        
+        # Update the user right in the GPO
+        Set-GPRegistryValue -Name $GpoName `
+            -Key "Machine\System\CurrentControlSet\Control\Lsa\UserRights" `
+            -ValueName $UserRight `
+            -Type MultiString `
+            -Value $sidString
+        
+        Write-Host "Updated $UserRight in GPO $GpoName with groups: $($Groups -join ', ')"
+    }
+    catch {
+        Write-Error "Error updating user rights for GPO $GpoName : $_"
+    }
+}
+
+function Update-GpoSecuritySettings {
+    param(
+        [string]$GpoName,
+        [string[]]$DenyLogonGroups
+    )
+    
+    try {
+        Write-Host "Updating security settings for GPO: $GpoName"
+        
+        # User Rights Assignment mappings
+        $userRights = @{
+            'SeDenyBatchLogonRight'             = 'Deny log on as a batch job'
+            'SeDenyServiceLogonRight'           = 'Deny log on as a service'
+            'SeDenyInteractiveLogonRight'       = 'Deny log on locally'
+            'SeDenyRemoteInteractiveLogonRight' = 'Deny log on through Remote Desktop Services'
+        }
+        
+        # Update each user right
+        foreach ($right in $userRights.Keys) {
+            Update-UserRightsAssignment -GpoName $GpoName -UserRight $right -Groups $DenyLogonGroups
+        }
+        
+        Write-Host "Completed security settings update for GPO: $GpoName"
+    }
+    catch {
+        Write-Error "Error updating security settings for GPO $GpoName : $_"
+    }
+}
+#endregion
+
 try {
-    # Get the domain information
+    #region Get Domain Info
     $domain = Get-ADDomain
     $domainDN = $domain.DistinguishedName
-    $rootDomain = $domain.DNSRoot
-    Write-Host "Using domain: $rootDomain"
+    $domainName = $domain.DNSRoot
+    Write-Host "Using domain: $domainName"
+    #endregion
+
+    #region Create OU Structure
+    Write-Host "`nCreating OU Structure..."
     
     # Create Admin OU at root level
     Create-OUIfNotExists -Name "Admin" -Path $domainDN
@@ -77,7 +155,7 @@ try {
     Create-OUIfNotExists -Name "Tier Base" -Path $adminPath
     $baseAdminPath = "OU=Tier Base,$adminPath"
     Create-OUIfNotExists -Name "Groups" -Path $baseAdminPath
-    Create-OUIfNotExists -Name "Admins" -Path $baseAdminPath  # Changed from "Tier Base Admins"
+    Create-OUIfNotExists -Name "Admins" -Path $baseAdminPath
     Create-AdminGroup -Name "TB_Admins" -Path "OU=Groups,$baseAdminPath"
     
     # Create other tiers under Admin OU
@@ -100,8 +178,137 @@ try {
     }
     
     Write-Host "`nOU structure creation completed successfully!"
+    #endregion
+
+    #region Import and Configure GPOs
+    if ($ImportGPOs) {
+        Write-Host "`nStarting GPO import and configuration..."
+
+        # Check if GPO zip exists
+        if (-not (Test-Path $GpoZipPath)) {
+            throw "GPO zip file not found at: $GpoZipPath"
+        }
+
+        # Extract GPO files
+        Expand-Archive -Path $GpoZipPath -DestinationPath $TempExtractPath -Force
+
+        # Copy ADMX/ADML files
+        $sysvolPolicyPath = "\\$domainName\SYSVOL\$domainName\Policies"
+        $policyDefinitionsPath = Join-Path $sysvolPolicyPath "PolicyDefinitions"
+        $languagePath = Join-Path $policyDefinitionsPath "en-US"
+
+        # Create PolicyDefinitions directories if they don't exist
+        if (-not (Test-Path $policyDefinitionsPath)) {
+            New-Item -Path $policyDefinitionsPath -ItemType Directory -Force
+        }
+        if (-not (Test-Path $languagePath)) {
+            New-Item -Path $languagePath -ItemType Directory -Force
+        }
+
+        # Copy template files
+        Copy-Item -Path (Join-Path $TempExtractPath "GPOs\Ubuntu-all.admx") -Destination $policyDefinitionsPath -Force
+        Copy-Item -Path (Join-Path $TempExtractPath "GPOs\Ubuntu-all.adml") -Destination $languagePath -Force
+
+        # Get all domain users for base policy
+        $allUsersGroup = "Domain Users"
+        
+        # Process each GPO directory
+        Get-ChildItem -Path (Join-Path $TempExtractPath "GPOs") -Directory | ForEach-Object {
+            $gpoDir = $_
+            $gpoName = $gpoDir.Name
+            
+            if (-not ($gpoName -eq "PolicyDefinitions")) {
+                Write-Host "`nProcessing GPO: $gpoName"
+
+                # Import GPO
+                try {
+                    # Check if GPO already exists
+                    $existingGPO = Get-GPO -Name $gpoName -ErrorAction SilentlyContinue
+                    
+                    if ($existingGPO) {
+                        Write-Host "GPO '$gpoName' already exists. Removing existing links..."
+                        # Remove existing links
+                        $existingLinks = Get-ADOrganizationalUnit -Filter * | 
+                        Where-Object { (Get-GPInheritance -Target $_).GpoLinks.DisplayName -contains $gpoName }
+                        foreach ($link in $existingLinks) {
+                            Remove-GPLink -Name $gpoName -Target $link.DistinguishedName -ErrorAction SilentlyContinue
+                        }
+                        
+                        # Backup existing GPO before removal
+                        $backupPath = Join-Path $env:TEMP "GPOBackup_$gpoName"
+                        Backup-GPO -Name $gpoName -Path $backupPath
+                        Remove-GPO -Name $gpoName -Force
+                    }
+
+                    # Import GPO
+                    $gpo = Import-GPO -BackupId (Get-ChildItem $gpoDir.FullName -Filter "Backup.xml" -Recurse).Directory.Name `
+                        -TargetName $gpoName `
+                        -Path $gpoDir.FullName `
+                        -CreateIfNeeded
+
+                    # Determine target OU and security settings based on GPO name
+                    if ($gpoName -match '^Base') {
+                        # For base computers
+                        $targetOU = $basePath
+                        $denyGroups = @()
+                        for ($i = 0; $i -lt $NumberOfTiers; $i++) {
+                            $denyGroups += "T${i}_Admins"
+                        }
+                    }
+                    elseif ($gpoName -match '^T(\d+)') {
+                        $tierNum = [int]$Matches[1]
+                        if ($tierNum -lt $NumberOfTiers) {
+                            $targetOU = "OU=Servers,OU=Tier $tierNum,$adminPath"
+                            # Deny everyone except this tier's admins
+                            $denyGroups = @($allUsersGroup)
+                            for ($i = 0; $i -lt $NumberOfTiers; $i++) {
+                                if ($i -ne $tierNum) {
+                                    $denyGroups += "T${i}_Admins"
+                                }
+                            }
+                            $denyGroups += "TB_Admins"
+                        }
+                        else {
+                            Write-Warning "Tier $tierNum GPO found but tier doesn't exist in OU structure - skipping"
+                            continue
+                        }
+                    }
+                    else {
+                        Write-Warning "Unknown GPO format: $gpoName - skipping"
+                        continue
+                    }
+
+                    # Link GPO
+                    New-GPLink -Name $gpoName -Target $targetOU -ErrorAction Stop
+                    Write-Host "Linked GPO '$gpoName' to OU: $targetOU"
+
+                    # Update security settings
+                    Update-GpoSecuritySettings -GpoName $gpoName -DenyLogonGroups $denyGroups
+                }
+                catch {
+                    Write-Error "Error processing GPO '$gpoName': $_"
+                }
+            }
+        }
+        Write-Host "`nGPO import and configuration completed successfully!"
+    }
+    else {
+        Write-Host "`nSkipping GPO import (use -ImportGPOs `$true to import GPOs)"
+    }
+    #endregion
+
+    Write-Host "`nComplete AD structure setup finished!"
     Write-Host "Delete Protection is set to: $EnableDeleteProtection"
+    if ($ImportGPOs) {
+        Write-Host "GPOs were imported and configured"
+    }
 }
 catch {
-    Write-Error ("An error occurred during OU structure creation - {0}" -f $_)
+    Write-Error ("An error occurred during setup - {0}" -f $_)
+}
+finally {
+    # Clean up
+    if (Test-Path $TempExtractPath) {
+        Remove-Item -Path $TempExtractPath -Recurse -Force -ErrorAction SilentlyContinue
+    }
 }
