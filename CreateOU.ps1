@@ -66,57 +66,6 @@ function Create-AdminGroup {
     }
 }
 
-function Update-UserRightsAssignment {
-    param(
-        [string]$GpoName,
-        [string]$UserRight,
-        [string[]]$Groups
-    )
-    
-    try {
-        # Get the GPO's ID GUID
-        $gpo = Get-GPO -Name $GpoName
-        $gpoId = $gpo.Id.Guid
-        
-        # Get path to GPO security settings
-        $gpoPath = "\\$domainName\SYSVOL\$domainName\Policies\{$gpoId}\Machine\Microsoft\Windows NT\SecEdit"
-        
-        # Create the SecEdit working directory if it doesn't exist
-        if (-not (Test-Path $gpoPath)) {
-            New-Item -Path $gpoPath -ItemType Directory -Force | Out-Null
-        }
-        
-        # Get SIDs for all groups
-        $sidList = @()
-        foreach ($group in $Groups) {
-            $adGroup = Get-ADGroup -Identity $group -ErrorAction Stop
-            $sidList += $adGroup.SID.Value
-            Write-Host "Found SID for group $group : $($adGroup.SID.Value)"
-        }
-        
-        # Create the security template
-        $infFile = Join-Path $gpoPath "gpttmpl.inf"
-        $securitySettings = @"
-[Unicode]
-Unicode=yes
-[Version]
-signature="`$CHICAGO`$"
-Revision=1
-[Privilege Rights]
-$UserRight = $($sidList -join ',')
-"@
-        
-        # Save the security template
-        $securitySettings | Out-File -FilePath $infFile -Encoding unicode -Force
-        Write-Host "Created security template for $UserRight in GPO: $GpoName"
-        
-        Write-Host "Updated $UserRight in GPO $GpoName with groups: $($Groups -join ', ')"
-    }
-    catch {
-        Write-Error "Error updating user rights for GPO $GpoName : $_"
-    }
-}
-
 function Update-GpoSecuritySettings {
     param(
         [string]$GpoName,
@@ -126,15 +75,7 @@ function Update-GpoSecuritySettings {
     try {
         Write-Host "Updating security settings for GPO: $GpoName"
         
-        # User Rights Assignment mappings
-        $userRights = @{
-            'SeDenyBatchLogonRight'             = 'Deny log on as a batch job'
-            'SeDenyServiceLogonRight'           = 'Deny log on as a service'
-            'SeDenyInteractiveLogonRight'       = 'Deny log on locally'
-            'SeDenyRemoteInteractiveLogonRight' = 'Deny log on through Remote Desktop Services'
-        }
-        
-        # Collect all settings into one security template
+        # Get the GPO's ID GUID
         $gpo = Get-GPO -Name $GpoName
         $gpoId = $gpo.Id.Guid
         $gpoPath = "\\$domainName\SYSVOL\$domainName\Policies\{$gpoId}\Machine\Microsoft\Windows NT\SecEdit"
@@ -144,13 +85,14 @@ function Update-GpoSecuritySettings {
             New-Item -Path $gpoPath -ItemType Directory -Force | Out-Null
         }
         
-        # Get SIDs for all groups
-        $sidList = @()
+        # Get both Domain Name and SIDs for all groups
+        $sidEntries = @()
         foreach ($group in $DenyLogonGroups) {
             $adGroup = Get-ADGroup -Identity $group -ErrorAction Stop
-            $sidList += $adGroup.SID.Value
+            # Format: "*DOMAIN\GroupName,SID"
+            $sidEntries += "*$domainName\$group,$($adGroup.SID.Value)"
         }
-        $sids = $sidList -join ','
+        $sidList = $sidEntries -join ','
         
         # Create the security template content
         $infContent = @"
@@ -160,10 +102,10 @@ Unicode=yes
 signature="`$CHICAGO`$"
 Revision=1
 [Privilege Rights]
-SeDenyBatchLogonRight = $sids
-SeDenyServiceLogonRight = $sids
-SeDenyInteractiveLogonRight = $sids
-SeDenyRemoteInteractiveLogonRight = $sids
+SeDenyBatchLogonRight = $sidList
+SeDenyServiceLogonRight = $sidList
+SeDenyInteractiveLogonRight = $sidList
+SeDenyRemoteInteractiveLogonRight = $sidList
 "@
         
         # Save the template
@@ -346,7 +288,7 @@ try {
         Write-Host "`nGPO import and configuration completed successfully!"
     }
     else {
-        Write-Host "`nSkipping GPO import (use -ImportGPOs to import GPOs)"
+        Write-Host "`nSkipping GPO import (GPO import is enabled by default, use -SkipGPO to skip)"
     }
     #endregion
 
