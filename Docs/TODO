@@ -1,14 +1,6 @@
-Auto-setup, från första boot till att klienten är redo och med i AD.
-    - Randomize hostname?
-
 Setup SQL- och Wordpress-servrar.
 
 Hur ska servrarna administreras? Auto-install SSH?
-
-- Setup scriptet kan:
-    Installera ssh
-    Kopiera en publik SSH-key
-    Ändra sshd.conf så att det finns en authorized keys fil som den läser ifrån som inte ligger i varje admins hemkatalog.
 
 Lokala kontons lösenord, hur ska dom hanteras?
 
@@ -20,8 +12,6 @@ Om allt fungerar på Win2022 och Ubu22.04, fungerar det på Win2025 och Ubu24.04
 
 Filserver på Windows som automountas via gpoer till Linuxklienter. Folder redirection?
 
-Skapa default GPOer som importeras av scriptet till varje tier.
-
 Definiera brandväggsregler.
 
 Skapa ett nätverksdiagram.
@@ -30,18 +20,27 @@ Enable and control RDP to Windows Servers
 
 Read-only AD-konto för WP
 
+GPO-dokumentation
+
 Randomize user password and write back to csv
-
-Create and link GPOs in script
-
-NTP sync till DC
 
 Security baselines
 
 Lock down SQL
+
+# NTP sync till DC (alla synkar till samma server)
+
+# Sätt timezone
 
 # Scripta Ubuntu Pro i setup-scriptet
 
 Ta bort brandvägg från förstudie
 Lägg till deras router i nuläge
 Lägg till brandväggsregler för miljön
+
+Wishlist:
+
+Kerberos SSH
+WP Kerberos sign-on
+GPO Import + Linking
+Windows fileshare med ACL

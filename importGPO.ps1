@@ -66,16 +66,50 @@ function Deploy-GPOFiles {
             try {
                 # Get the backup directory name (GUID)
                 $backupId = $gpoBackup.Name
-                Write-Host "`nProcessing GPO backup directory: $backupId" -ForegroundColor Yellow
                 
-                # Import the GPO using directory name as backup ID
-                Import-GPO -BackupId $backupId -Path $gpoBackup.Parent.FullName -TargetName "Imported_$backupId" -CreateIfNeeded
-                Write-Host "Successfully imported GPO with ID: $backupId" -ForegroundColor Green
+                # Try to get GPO name from DomainSysvol\GPO\gpreport.xml
+                $gpreportPath = Join-Path $gpoBackup.FullName "DomainSysvol\GPO\gpreport.xml"
+                if (Test-Path $gpreportPath) {
+                    [xml]$gpreport = Get-Content $gpreportPath
+                    $gpoName = $gpreport.GPO.Name
+                }
+                
+                # If gpreport.xml not found or name not in it, try backup.xml
+                if (-not $gpoName) {
+                    $backupXmlPath = Join-Path $gpoBackup.FullName "backup.xml"
+                    if (Test-Path $backupXmlPath) {
+                        [xml]$backupXml = Get-Content $backupXmlPath
+                        # Try to get from SecurityDescriptor first
+                        $gpoName = $backupXml.GroupPolicyBackupScheme.GroupPolicyObject.SecurityDescriptor.DSPath.Split(',')[0] -replace 'CN=', ''
+                        # If not found, try GroupPolicyObject name
+                        if (-not $gpoName) {
+                            $gpoName = $backupXml.GroupPolicyBackupScheme.GroupPolicyObject.Name
+                        }
+                    }
+                }
+                
+                # If still no name found, use backup ID
+                if (-not $gpoName) {
+                    $gpoName = $backupId
+                }
+
+                Write-Host "`nProcessing GPO: $gpoName (Backup ID: $backupId)" -ForegroundColor Yellow
+                
+                # Import the GPO
+                Import-GPO -BackupId $backupId -Path $gpoBackup.Parent.FullName -TargetName $gpoName -CreateIfNeeded
+                Write-Host "Successfully imported GPO: $gpoName" -ForegroundColor Green
             }
             catch {
                 Write-Warning "Failed processing GPO backup in directory $($gpoBackup.Name)"
                 Write-Warning "Error: $_"
                 Write-Host "Full backup path: $($gpoBackup.FullName)" -ForegroundColor Yellow
+                
+                # Try to display backup.xml content for debugging
+                $backupXmlPath = Join-Path $gpoBackup.FullName "backup.xml"
+                if (Test-Path $backupXmlPath) {
+                    Write-Host "Backup.xml content:" -ForegroundColor Yellow
+                    Get-Content $backupXmlPath | Write-Host
+                }
             }
         }
     }
