@@ -66,56 +66,65 @@ function Create-AdminGroup {
     }
 }
 
-function Update-GpoSecuritySettings {
+function Create-MigrationTable {
     param(
-        [string]$GpoName,
-        [string[]]$DenyLogonGroups
+        [string]$Path,
+        [string]$DomainNetBIOS
     )
     
     try {
-        Write-Host "Updating security settings for GPO: $GpoName"
+        # Get domain information and well-known groups
+        $domain = Get-ADDomain
+        $domainDN = $domain.DistinguishedName
+        $domainSID = $domain.DomainSid.Value
+        $domainFQDN = $domain.DNSRoot
         
-        # Get the GPO's ID GUID
-        $gpo = Get-GPO -Name $GpoName
-        $gpoId = $gpo.Id.Guid
-        $gpoPath = "\\$domainName\SYSVOL\$domainName\Policies\{$gpoId}\Machine\Microsoft\Windows NT\SecEdit"
-        
-        # Create the SecEdit working directory if it doesn't exist
-        if (-not (Test-Path $gpoPath)) {
-            New-Item -Path $gpoPath -ItemType Directory -Force | Out-Null
-        }
-        
-        # Get both Domain Name and SIDs for all groups
-        $sidEntries = @()
-        foreach ($group in $DenyLogonGroups) {
-            $adGroup = Get-ADGroup -Identity $group -ErrorAction Stop
-            # Format: "*DOMAIN\GroupName,SID"
-            $sidEntries += "*$domainName\$group,$($adGroup.SID.Value)"
-        }
-        $sidList = $sidEntries -join ','
-        
-        # Create the security template content
-        $infContent = @"
-[Unicode]
-Unicode=yes
-[Version]
-signature="`$CHICAGO`$"
-Revision=1
-[Privilege Rights]
-SeDenyBatchLogonRight = $sidList
-SeDenyServiceLogonRight = $sidList
-SeDenyInteractiveLogonRight = $sidList
-SeDenyRemoteInteractiveLogonRight = $sidList
+        # Create migration table XML content
+        $migTableContent = @"
+<?xml version="1.0" encoding="utf-8"?>
+<MigrationTable xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://www.microsoft.com/GroupPolicy/GPOOperations/MigrationTable">
+  <Mapping>
+    <Source>customer.domain.fqdn</Source>
+    <Destination>$domainFQDN</Destination>
+  </Mapping>
+  <Mapping>
+    <Source>DOMAIN_NETBIOS</Source>
+    <Destination>$DomainNetBIOS</Destination>
+  </Mapping>
+  <Mapping>
+    <Source>Domain Users</Source>
+    <Destination>$($(Get-ADGroup -Filter "SID -eq '$domainSID-513'").Name)</Destination>
+  </Mapping>
 "@
+
+        # Add mappings for each tier admin group
+        for ($i = 0; $i -lt $NumberOfTiers; $i++) {
+            $groupName = "T${i}_Admins"
+            $migTableContent += @"
+  <Mapping>
+    <Source>T${i}_Admins</Source>
+    <Destination>$groupName</Destination>
+  </Mapping>
+"@
+        }
+
+        # Add TB_Admins mapping
+        $migTableContent += @"
+  <Mapping>
+    <Source>TB_Admins</Source>
+    <Destination>TB_Admins</Destination>
+  </Mapping>
+</MigrationTable>
+"@
+
+        # Save the migration table
+        $migTablePath = Join-Path $Path "MigTable.migtable"
+        $migTableContent | Out-File -FilePath $migTablePath -Encoding UTF8
         
-        # Save the template
-        $infFile = Join-Path $gpoPath "gpttmpl.inf"
-        $infContent | Out-File -FilePath $infFile -Encoding unicode -Force
-        
-        Write-Host "Completed security settings update for GPO: $GpoName"
+        return $migTablePath
     }
     catch {
-        Write-Error "Error updating security settings for GPO $GpoName : $_"
+        Write-Error "Error creating migration table: $_"
     }
 }
 #endregion
@@ -204,8 +213,8 @@ try {
         Copy-Item -Path (Join-Path $TempExtractPath "GPOs\Ubuntu-all.admx") -Destination $policyDefinitionsPath -Force
         Copy-Item -Path (Join-Path $TempExtractPath "GPOs\Ubuntu-all.adml") -Destination $languagePath -Force
 
-        # Get all domain users for base policy
-        $allUsersGroup = "Domain Users"
+        # Create migration table
+        $migTablePath = Create-MigrationTable -Path $TempExtractPath -DomainNetBIOS $domain.NetBIOSName
         
         # Process each GPO directory
         Get-ChildItem -Path (Join-Path $TempExtractPath "GPOs") -Directory | ForEach-Object {
@@ -235,33 +244,36 @@ try {
                         Remove-GPO -Name $gpoName -Force
                     }
 
-                    # Import GPO
-                    $gpo = Import-GPO -BackupId (Get-ChildItem $gpoDir.FullName -Filter "Backup.xml" -Recurse).Directory.Name `
+                    # Import GPO with migration table
+                    $backupId = (Get-ChildItem $gpoDir.FullName -Filter "Backup.xml" -Recurse).Directory.Name
+                    $gpo = Import-GPO -BackupId $backupId `
                         -TargetName $gpoName `
                         -Path $gpoDir.FullName `
-                        -CreateIfNeeded
+                        -CreateIfNeeded `
+                        -MigrationTable $migTablePath
 
-                    # Determine target OU and security settings based on GPO name
+                    # Determine target OU based on GPO name
                     if ($gpoName -match '^Base') {
-                        # For base computers
-                        $targetOU = $basePath
-                        $denyGroups = @()
-                        for ($i = 0; $i -lt $NumberOfTiers; $i++) {
-                            $denyGroups += "T${i}_Admins"
+                        if ($gpoName -match 'Sudo') {
+                            # Base Sudo Rights goes to Linux computers OU
+                            $targetOU = "OU=Linux,OU=Computers,$basePath"
+                        }
+                        else {
+                            # Base access control goes to Computers OU
+                            $targetOU = "OU=Computers,$basePath"
                         }
                     }
                     elseif ($gpoName -match '^T(\d+)') {
                         $tierNum = [int]$Matches[1]
                         if ($tierNum -lt $NumberOfTiers) {
-                            $targetOU = "OU=Servers,OU=Tier $tierNum,$adminPath"
-                            # Deny everyone except this tier's admins
-                            $denyGroups = @($allUsersGroup)
-                            for ($i = 0; $i -lt $NumberOfTiers; $i++) {
-                                if ($i -ne $tierNum) {
-                                    $denyGroups += "T${i}_Admins"
-                                }
+                            if ($gpoName -match 'Sudo') {
+                                # Tier Sudo Rights goes to Linux servers OU
+                                $targetOU = "OU=Linux,OU=Servers,OU=Tier $tierNum,$adminPath"
                             }
-                            $denyGroups += "TB_Admins"
+                            else {
+                                # Tier access control goes to Servers OU
+                                $targetOU = "OU=Servers,OU=Tier $tierNum,$adminPath"
+                            }
                         }
                         else {
                             Write-Warning "Tier $tierNum GPO found but tier doesn't exist in OU structure - skipping"
@@ -276,9 +288,6 @@ try {
                     # Link GPO
                     New-GPLink -Name $gpoName -Target $targetOU -ErrorAction Stop
                     Write-Host "Linked GPO '$gpoName' to OU: $targetOU"
-
-                    # Update security settings
-                    Update-GpoSecuritySettings -GpoName $gpoName -DenyLogonGroups $denyGroups
                 }
                 catch {
                     Write-Error "Error processing GPO '$gpoName': $_"
