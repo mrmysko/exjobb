@@ -67,28 +67,14 @@ function Deploy-GPOFiles {
                 # Get the backup directory name (GUID)
                 $backupId = $gpoBackup.Name
                 
-                # Try to get GPO name from DomainSysvol\GPO\gpreport.xml
+                # Get GPO name from gpreport.xml
                 $gpreportPath = Join-Path $gpoBackup.FullName "DomainSysvol\GPO\gpreport.xml"
                 if (Test-Path $gpreportPath) {
-                    [xml]$gpreport = Get-Content $gpreportPath
-                    $gpoName = $gpreport.GPO.Name
+                    $gpoName = Select-String -Path $gpreportPath -Pattern "<Name>(.*)</Name>" | 
+                    ForEach-Object { $_.Matches.Groups[1].Value }
                 }
                 
-                # If gpreport.xml not found or name not in it, try backup.xml
-                if (-not $gpoName) {
-                    $backupXmlPath = Join-Path $gpoBackup.FullName "backup.xml"
-                    if (Test-Path $backupXmlPath) {
-                        [xml]$backupXml = Get-Content $backupXmlPath
-                        # Try to get from SecurityDescriptor first
-                        $gpoName = $backupXml.GroupPolicyBackupScheme.GroupPolicyObject.SecurityDescriptor.DSPath.Split(',')[0] -replace 'CN=', ''
-                        # If not found, try GroupPolicyObject name
-                        if (-not $gpoName) {
-                            $gpoName = $backupXml.GroupPolicyBackupScheme.GroupPolicyObject.Name
-                        }
-                    }
-                }
-                
-                # If still no name found, use backup ID
+                # If no name found, use backup ID
                 if (-not $gpoName) {
                     $gpoName = $backupId
                 }
@@ -103,13 +89,6 @@ function Deploy-GPOFiles {
                 Write-Warning "Failed processing GPO backup in directory $($gpoBackup.Name)"
                 Write-Warning "Error: $_"
                 Write-Host "Full backup path: $($gpoBackup.FullName)" -ForegroundColor Yellow
-                
-                # Try to display backup.xml content for debugging
-                $backupXmlPath = Join-Path $gpoBackup.FullName "backup.xml"
-                if (Test-Path $backupXmlPath) {
-                    Write-Host "Backup.xml content:" -ForegroundColor Yellow
-                    Get-Content $backupXmlPath | Write-Host
-                }
             }
         }
     }
