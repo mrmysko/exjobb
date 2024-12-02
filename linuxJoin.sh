@@ -2,9 +2,24 @@
 
 # Usage: sudo bash -c "$(wget -qLO - https://raw.githubusercontent.com/mrmysko/exjobb/refs/heads/main/linuxJoin.sh)"
 
-CLIENT=false
+
 DOMAIN_USER="Administrator"
 DOMAIN="Labb.se"
+INSTALL_SSH=false
+
+# Parse command line arguments
+while [[ $# -gt 0 ]]; do
+    case $1 in
+        -server)
+            INSTALL_SSH=true
+            shift
+            ;;
+        *)
+            msg_error "Unknown parameter: $1"
+            exit 1
+            ;;
+    esac
+done
 
 # Get system info
 NAME=$(lsb_release -a 2>/dev/null | grep "Distributor ID:" | cut -f2)
@@ -101,8 +116,13 @@ while true; do
 done
 
 # Configure SSH
-if ! [[ $CLIENT ]]; then
-    DEBIAN_FRONTEND=noninteractive apt -qq install -y openssh-server
+if [ "$INSTALL_SSH" = true ]; then
+    msg_info "Installing OpenSSH Server"
+    if ! DEBIAN_FRONTEND=noninteractive apt -qq install -y openssh-server; then
+        msg_error "Failed to install OpenSSH Server"
+        exit 1
+    fi
+    msg_info "OpenSSH Server installed successfully"
 fi
 
 # Restart
