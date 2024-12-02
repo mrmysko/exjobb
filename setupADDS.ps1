@@ -18,21 +18,24 @@ try {
         Install-ADDSDomainController -InstallDns -DomainName $DomainName
     }
 }
-# Else create forest.
+# Else create forest and configure DHCP after restart
 catch {
-    Install-ADDSForest -InstallDns -DomainName $DomainName
-    
+    # Create scheduled task to install DHCP after restart if parameter is set
     if ($DHCP) {
-        Install-WindowsFeature DHCP -IncludeManagementTools
-        Add-DhcpServerSecurityGroup
-        
-        $computerName = $env:COMPUTERNAME
-        $ipAddress = (Get-NetIPAddress -AddressFamily IPv4 -InterfaceAlias Ethernet).IPAddress
-        $fqdn = "$computerName.$DomainName"
-        
-        Add-DhcpServerInDC -DnsName $fqdn -IPAddress $ipAddress
-        Set-ItemProperty -Path registry::HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\ServerManager\Roles\12 -Name ConfigurationState -Value 2
+        $action = New-ScheduledTaskAction -Execute 'Powershell.exe' -Argument '-NoProfile -ExecutionPolicy Bypass -Command "
+            Install-WindowsFeature DHCP -IncludeManagementTools;
+            Add-DhcpServerSecurityGroup;
+            $computerName = $env:COMPUTERNAME;
+            $ipAddress = (Get-NetIPAddress -AddressFamily IPv4 -InterfaceAlias Ethernet).IPAddress;
+            $fqdn = \"$computerName.$using:DomainName\";
+            Add-DhcpServerInDC -DnsName $fqdn -IPAddress $ipAddress;
+            Set-ItemProperty -Path registry::HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\ServerManager\Roles\12 -Name ConfigurationState -Value 2;
+            Unregister-ScheduledTask -TaskName InstallDHCP -Confirm:$false
+        "'
+        Register-ScheduledTask -TaskName "InstallDHCP" -Action $action -User "SYSTEM" -RunLevel Highest -Trigger (New-ScheduledTaskTrigger -AtStartup)
     }
+    
+    Install-ADDSForest -InstallDns -DomainName $DomainName
 }
 
 # Sync time after ADDS Setup

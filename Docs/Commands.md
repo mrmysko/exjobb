@@ -8,6 +8,8 @@
 |Check applied policies|```adsysctl policy applied```|
 |Set IP address|```New-NetIPAddress -IPAddress "ip" -InterfaceAlias “Ethernet” -DefaultGateway "ip" -AddressFamily IPv4 -PrefixLength "len"```|
 |Rename computer|```Rename-Computer -NewName "name"```|
+|Remove routes|```Remove-NetRoute -InterfaceAlias "Ethernet"```|
+|Remove IP Address|```Remove-NetIPAddress -InterfaceAlias "ethernet"```|
 
 adcli - Perform actions in Active Directory
 
