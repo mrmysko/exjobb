@@ -2,10 +2,13 @@
 
 # Usage: sudo bash -c "$(wget -qLO - https://raw.githubusercontent.com/mrmysko/exjobb/refs/heads/main/wpSetup.sh)"
 
+DOMAIN="doman.nu"
 MYSQL_DATABASE="wordpress"
-MYSQL_DB_HOST="sql.labb.se"
+MYSQL_DB_HOST="sql.${DOMAIN}"
 MYSQL_USER="wordpress"
-WP_ADMIN_PASSWORD="Linux4Ever"
+WP_ADMIN_USER="wp_admin"
+WP_ADMIN_PASS="Linux4Ever"
+WP_PATH="/var/www/wordpress"
 
 
 msg_info() {
@@ -37,6 +40,20 @@ if ! wget -qO - https://wordpress.org/latest.tar.gz | tar -xz -C /var/www/; then
     exit 1
 fi
 
+msg_info "Setup WP-CLI"
+wget -q https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar
+
+chmod +x wp-cli.phar
+mv wp-cli.phar /usr/local/bin/wp
+
+wp --allow-root --path="${WP_PATH}" config create --dbhost="${MYSQL_DB_HOST}" --dbuser="${MYSQL_USER}" --dbpass="${WP_ADMIN_PASS}" --dbname="${MYSQL_DATABASE}"
+wp --allow-root --path="${WP_PATH}" core install --url="www.${DOMAIN}" --admin_email="admin@${DOMAIN}" --title="Homepage" --admin_user="${WP_ADMIN_USER}" --admin_password="${WP_ADMIN_PASSWORD}"
+wp --allow-root --path="${WP_PATH}" plugin install next-active-directory-integration
+
+# Configure Apache
+msg_info "Configuring Apache"
+a2dissite 000-default.conf
+
 # Create Apache configuration for WordPress
 cat > /etc/apache2/sites-available/wordpress.conf << 'EOF'
 <VirtualHost *:80>
@@ -54,40 +71,6 @@ cat > /etc/apache2/sites-available/wordpress.conf << 'EOF'
 </VirtualHost>
 EOF
 
-# cd /var/www/wordpress || exit
-
-# # Create wp-config.php
-# cat > "wp-config.php" << EOF
-# <?php
-
-# define( 'DB_NAME', '$MYSQL_DATABASE' );
-# define( 'DB_USER', '$MYSQL_USER' );
-# define( 'DB_PASSWORD', '$WP_ADMIN_PASSWORD' );
-# define( 'DB_HOST', '$MYSQL_DB_HOST' );
-# define( 'DB_CHARSET', 'utf8' );
-# define( 'DB_COLLATE', '' );
-# EOF
-
-# curl -s https://api.wordpress.org/secret-key/1.1/salt/ >> wp-config.php
-
-# cat >> "wp-config.php" << "EOF"
-
-# $table_prefix = 'wp_';
-# define( 'WP_DEBUG', false );
-
-# /** Absolute path to the WordPress directory. */
-# if ( ! defined( 'ABSPATH' ) ) {
-#     define( 'ABSPATH', __DIR__ . '/' );
-# }
-
-# /** Sets up WordPress vars and included files. */
-# require_once ABSPATH . 'wp-settings.php';
-# EOF
-
-# Configure Apache
-msg_info "Configuring Apache"
-a2dissite 000-default.conf
-
 # Enable required modules
 a2enmod rewrite
 a2enmod php
@@ -97,8 +80,8 @@ a2ensite wordpress.conf
 
 # Set proper permissions
 msg_info "Setting permissions"
-chown -R www-data:www-data /var/www/wordpress
-chmod -R 755 /var/www/wordpress
+chown -R www-data:www-data "${WP_PATH}"
+chmod -R 755 "${WP_PATH}"
 
 # Restart Apache
 msg_info "Restarting Apache"
@@ -108,13 +91,3 @@ if ! systemctl restart apache2; then
 fi
 
 msg_info "WordPress installation complete!"
-
-msg_info "Setup WP-CLI"
-wget -q https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar
-
-chmod +x wp-cli.phar
-mv wp-cli.phar /usr/local/bin/wp
-
-wp --allow-root --path="/var/www/wordpress" plugin install next-active-directory-integration
-
-#wp --allow-root --path=/var/www/wordpress core install --url="www.labb.se" --admin_email="admin.labb.se" --title=Homepage --admin_user="$WP_ADMIN_USER" --admin_password="$WP_ADMIN_PASSWORD" --admin_email="admin@labb.se"
