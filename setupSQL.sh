@@ -56,7 +56,7 @@ bind-address = 0.0.0.0
 port = 3306
 EOF
 
-if ! systemctl restart MariaDB; then
+if ! systemctl restart mariadb.service; then
     msg_error "Failed to restart MariaDB"
     exit 1
 fi
