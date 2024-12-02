@@ -1,4 +1,4 @@
-# Setup SQL- och Wordpress-servrar.
+# Setup SQL- och Wordpress-servrar
 
 # Hur ska servrarna administreras? Auto-install SSH? - Parameter i joinscript instllerar openssh + rdp
 
@@ -23,6 +23,8 @@ Randomize user password and write back to csv
 # Security baselines
 
 Lock down SQL
+
+T0-Admin rättigheter, kan inte ändra Domain GPOer
 
 # NTP sync till DC (alla synkar till samma server)
 

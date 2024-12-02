@@ -6,6 +6,8 @@
 |Check domain status #2|```sssctl domain-status <domain>```|
 |Query entries from databases configured in nsswitch.conf|```getent <entry> <object>```|
 |Check applied policies|```adsysctl policy applied```|
+|Set IP address|```New-NetIPAddress -IPAddress "ip" -InterfaceAlias “Ethernet” -DefaultGateway "ip" -AddressFamily IPv4 -PrefixLength "len"```|
+|Rename computer|```Rename-Computer -NewName "name"```|
 
 adcli - Perform actions in Active Directory
 
