@@ -23,12 +23,9 @@ catch {
     # Create scheduled task to install DHCP after restart if parameter is set
     if ($DHCP) {
         $action = New-ScheduledTaskAction -Execute 'Powershell.exe' -Argument '-NoProfile -ExecutionPolicy Bypass -Command "
+            Start-Sleep -Seconds 60;
             Install-WindowsFeature DHCP -IncludeManagementTools;
             Add-DhcpServerSecurityGroup;
-            $computerName = $env:COMPUTERNAME;
-            $ipAddress = (Get-NetIPAddress -AddressFamily IPv4 -InterfaceAlias Ethernet).IPAddress;
-            $fqdn = \"$computerName.$using:DomainName\";
-            Add-DhcpServerInDC -DnsName $fqdn -IPAddress $ipAddress;
             Set-ItemProperty -Path registry::HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\ServerManager\Roles\12 -Name ConfigurationState -Value 2;
             Unregister-ScheduledTask -TaskName InstallDHCP -Confirm:$false
         "'

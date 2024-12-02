@@ -1,9 +1,9 @@
 DC:
 1. Install Windows
-2. Install DNS, DHCP and ADDS modules.
-3. Setup a domain.
+2. Run setupADDS.sh script
+3. Authorize DHCP Server
+4. Create DHCP scope
 4. Create a reverse ptr zone
-4. Install DHCP
 4. Run createOU.ps1
 5. Install admx files in <domain>/sysvol/<domain>/Policies/PolicyDefinitions
 6. Run importUsers.ps1
