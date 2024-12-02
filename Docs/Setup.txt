@@ -2,24 +2,23 @@ DC:
 1. Install Windows
 2. Install DNS, DHCP and ADDS modules.
 3. Setup a domain.
+4. Create a reverse ptr zone
+4. Install DHCP
 4. Run createOU.ps1
 5. Install admx files in <domain>/sysvol/<domain>/Policies/PolicyDefinitions
+6. Run importUsers.ps1
+7. Install Security baselines
+8. Create GPOs (see docs)
+9. Link GPOs
+10. Enable RDP
 
 Client:
 1. Install ubuntu
-2. Set dns server to DC
-3. Set hostname and hosts to <hostname>.<domain>
-4. Install realmd
-5. realm join -U <AD user> <domain>
-6. realm deny --all :(Deny local login from all AD accounts)
-7. realm permit -g <group> :(Permit local login of <group>)
-8. visudo -> %<group> ALL=(ALL) ALL :(Grant sudo permissions to users of <group>) 
-9. Setup ubuntu pro
-10. Install adsys
+2. Set dns server to DC (if not dhcp)
+3. Run linuxJoin.sh -client
 
-
-libapache2-mod-php
-php-ldap
-php-mysql
-https://wordpress.org/latest.tar.gz
-tar -xvf latest.tar.gz
+Server:
+1. Install Ubuntu server
+2. Set dns server to DC (if not dhcp)
+3. Run linuxJoin.sh -server
+4. Run setupWP.sh/setupSQL.sh

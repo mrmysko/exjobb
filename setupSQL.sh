@@ -26,8 +26,8 @@ if ! (apt -qq update && DEBIAN_FRONTEND=noninteractive apt -qq install mariadb-s
     exit 1
 fi
 
-systemctl start mariadb
-systemctl enable mariadb
+systemctl start mariadb.service
+systemctl enable mariadb.service
 
 msg_info "Configuring database"
 mysql -u root <<EOF

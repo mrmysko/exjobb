@@ -1,6 +1,6 @@
-Setup SQL- och Wordpress-servrar.
+# Setup SQL- och Wordpress-servrar.
 
-Hur ska servrarna administreras? Auto-install SSH?
+# Hur ska servrarna administreras? Auto-install SSH? - Parameter i joinscript instllerar openssh + rdp
 
 Lokala kontons lösenord, hur ska dom hanteras?
 
@@ -8,15 +8,11 @@ PSOer för användare - Implementera, appliceras dom på Linux också?
 
 Köra tjänster på Linux som service AD-konton
 
-Om allt fungerar på Win2022 och Ubu22.04, fungerar det på Win2025 och Ubu24.04?
-
 Filserver på Windows som automountas via gpoer till Linuxklienter. Folder redirection?
 
 Definiera brandväggsregler.
 
 Skapa ett nätverksdiagram.
-
-Enable and control RDP to Windows Servers
 
 Read-only AD-konto för WP
 
@@ -24,7 +20,7 @@ GPO-dokumentation
 
 Randomize user password and write back to csv
 
-Security baselines
+# Security baselines
 
 Lock down SQL
 
@@ -38,9 +34,20 @@ Ta bort brandvägg från förstudie
 Lägg till deras router i nuläge
 Lägg till brandväggsregler för miljön
 
+Docs:
+    - Case (Done)
+    - Tidsplan (Done)
+    - Förstudie (Review)
+    - Offert (Pr-review)
+    - Teknisk Dokumentation
+    - Tidsrapport
+    - Faktura
+    - Antaganden
+
 Wishlist:
 
 Kerberos SSH
 WP Kerberos sign-on
 GPO Import + Linking
 Windows fileshare med ACL
+Privileged RDP
