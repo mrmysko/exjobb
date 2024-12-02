@@ -4,8 +4,17 @@
 
 
 DOMAIN_USER="Administrator"
-DOMAIN="Labb.se"
 INSTALL_SSH=false
+DOMAIN=""
+
+# Function to show usage
+show_usage() {
+    echo "Usage: $0 -domain DOMAIN_NAME [-server]"
+    echo "Options:"
+    echo "  -domain NAME    Specify the domain name (required)"
+    echo "  -server        Install OpenSSH server"
+    exit 1
+}
 
 # Parse command line arguments
 while [[ $# -gt 0 ]]; do
@@ -14,9 +23,21 @@ while [[ $# -gt 0 ]]; do
             INSTALL_SSH=true
             shift
             ;;
+        -domain)
+            if [ -n "$2" ]; then
+                DOMAIN="$2"
+                shift 2
+            else
+                msg_error "Domain name is required for -domain parameter"
+                show_usage
+            fi
+            ;;
+        -h|--help)
+            show_usage
+            ;;
         *)
             msg_error "Unknown parameter: $1"
-            exit 1
+            show_usage
             ;;
     esac
 done
@@ -38,12 +59,19 @@ escape_spaces() {
     echo "${text// /\\ }"
 }
 
+# Check if domain is provided
+if [ -z "$DOMAIN" ]; then
+    msg_error "Domain parameter is required"
+    show_usage
+fi
+
 if [ "$EUID" -ne 0 ]; then
     msg_error "Root required"
     exit 1
 fi
 
 msg_info "Setting up client"
+msg_info "Using domain: $DOMAIN"
 
 msg_info "Installing dependencies"
 if ! (apt -qq update && DEBIAN_FRONTEND=noninteractive apt -qq install -y \
