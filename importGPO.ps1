@@ -26,54 +26,55 @@ if (-not (Test-Path $MigTablePath)) {
     throw "Migration table not found: $MigTablePath"
 }
 
-# Function to translate source SIDs to destination SIDs
-function Translate-SID {
-    param($sourceSID, $sourceName)
-    try {
-        $destinationGroup = Get-ADGroup -Filter { Name -eq $sourceName }
-        return $destinationGroup.SID
-    }
-    catch {
-        Write-Warning "Could not find a matching group for $sourceName ($sourceSID) in the destination domain."
-        return $null
-    }
-}
-
-# Read migration table and map SIDs
-$migrationTableXml = [xml](Get-Content $MigTablePath)
-$mappings = @{}
-
-foreach ($mapping in $migrationTableXml.MigrationTable.Mapping) {
-    $sourceSID = $mapping.Source
-    $destinationName = $mapping.Destination
-    $destinationSID = Translate-SID -sourceSID $sourceSID -sourceName $destinationName
-    if ($destinationSID) {
-        $mappings[$sourceSID] = $destinationSID
+# Function to read GPO name from the XML file in the backup folder
+function Get-GPONameFromBackup {
+    param($BackupFolderPath)
+    
+    $backupXmlPath = Join-Path $BackupFolderPath "Backup.xml"
+    if (Test-Path $backupXmlPath) {
+        try {
+            [xml]$backupInfo = Get-Content $backupXmlPath -ErrorAction Stop
+            return $backupInfo.GroupPolicyBackupScheme.GroupPolicyObject.GroupPolicyCoreSettings.DisplayName.InnerText
+        }
+        catch {
+            Write-Warning "Error reading backup XML in $BackupFolderPath: $_"
+            return $null
+        }
     }
     else {
-        Write-Warning "No destination SID found for source SID: $sourceSID"
+        Write-Warning "Backup XML file not found in $BackupFolderPath"
     }
+    return $null
 }
 
-# Process GPO backups
+# Process all backup folders
 $backupFolders = Get-ChildItem -Path $BackupPath -Directory
 
 foreach ($folder in $backupFolders) {
     try {
         $backupId = $folder.Name
-        $gpoName = (Get-Content (Join-Path $folder.FullName "Backup.xml")).GroupPolicyBackupScheme.GroupPolicyObject.GroupPolicyCoreSettings.DisplayName
+        $gpoName = Get-GPONameFromBackup -BackupFolderPath $folder.FullName
+
+        if (-not $gpoName) {
+            Write-Warning "Could not determine GPO name for backup ID: $backupId"
+            continue
+        }
 
         Write-Host "Processing GPO: $gpoName (Backup ID: $backupId)"
 
+        # Construct the Import-GPO command with the extracted GPO name
+        $cmd = "Import-GPO -BackupId $backupId -Path $BackupPath -MigrationTable $MigTablePath -TargetName $gpoName"
+        Write-Host "Executing: $cmd"
+
         if (-not $WhatIf) {
-            Import-GPO -BackupId $backupId -Path $BackupPath -MigrationTable $MigTablePath -CreateIfNeeded $true
+            Import-GPO -BackupId $backupId -Path $BackupPath -MigrationTable $MigTablePath -TargetName $gpoName
             Write-Host "Successfully imported: $gpoName" -ForegroundColor Green
         }
         else {
-            Write-Host "WhatIf: Would import $gpoName" -ForegroundColor Yellow
+            Write-Host "WhatIf: Would import $gpoName (TargetName: $gpoName)" -ForegroundColor Yellow
         }
     }
     catch {
-        Write-Warning "Failed to import GPO: $_"
+        Write-Warning "Failed to import GPO (Backup ID: $backupId). Error: $_"
     }
 }
