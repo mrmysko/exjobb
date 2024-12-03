@@ -3,15 +3,15 @@ param(
     [string]$DestinationDomain,
     
     [Parameter(Mandatory = $false)]
-    [string]$BackupPath = ".\GPOBackup",
+    [string]$BackupPath = (Join-Path $PSScriptRoot "GPOBackup"),
     
     [Parameter(Mandatory = $false)]
-    [string]$MigTablePath = ".\gpo-migration.migtable"
+    [string]$MigTablePath = (Join-Path $PSScriptRoot "gpo-migration.migtable")
 )
 
 # Create backup directory if it doesn't exist
 if (-not (Test-Path $BackupPath)) {
-    New-Item -ItemType Directory -Path $BackupPath
+    New-Item -ItemType Directory -Path $BackupPath -Force
 }
 
 # Get current domain
@@ -71,6 +71,7 @@ $finalXml = $xmlStart + [System.Environment]::NewLine +
             ($tierMappings -join [System.Environment]::NewLine) + 
 [System.Environment]::NewLine + $xmlEnd
 
+# Save migration table
 $finalXml | Out-File -FilePath $MigTablePath -Encoding UTF8
 
 # Export GPOs
@@ -80,10 +81,22 @@ $timestamp = Get-Date -Format "yyyyMMdd_HHmmss"
 $reportPath = Join-Path $BackupPath "GPOReport_$timestamp.html"
 
 # Export HTML report of all GPOs
-Get-GPOReport -All -ReportType HTML -Path $reportPath
+try {
+    Get-GPOReport -All -ReportType HTML -Path $reportPath
+    Write-Host "Successfully exported GPO report to: $reportPath" -ForegroundColor Green
+}
+catch {
+    Write-Warning "Failed to export GPO report: $_"
+}
 
 # Backup all GPOs
-$backupResult = Backup-GPO -All -Path $BackupPath
+try {
+    $backupResult = Backup-GPO -All -Path $BackupPath
+    Write-Host "Successfully backed up GPOs to: $BackupPath" -ForegroundColor Green
+}
+catch {
+    Write-Warning "Failed to backup GPOs: $_"
+}
 
 # Output results
 Write-Host "`nExport Summary:"
@@ -111,6 +124,16 @@ Files:
 - Migration Table: $MigTablePath
 - GPO Backup: $BackupPath
 - GPO Report: $reportPath
+
+Tier Groups:
+$($tierGroups | ForEach-Object { "- $_" })
+
+Exported GPOs:
+$($backupResult | ForEach-Object { "- $($_.DisplayName)" })
 "@
 
-$manifestContent | Out-File -FilePath (Join-Path $BackupPath "ExportManifest.txt")
+$manifestPath = Join-Path $BackupPath "ExportManifest.txt"
+$manifestContent | Out-File -FilePath $manifestPath
+
+Write-Host "`nManifest file created at: $manifestPath"
+Write-Host "Export process complete!"
