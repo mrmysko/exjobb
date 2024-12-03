@@ -35,6 +35,7 @@ T0-Admin rättigheter, kan inte ändra Domain GPOer
 Ta bort brandvägg från förstudie
 Lägg till deras router i nuläge
 Lägg till brandväggsregler för miljön
+Ändra Base till TB (lättare att skripta)
 
 Docs:
     - Case (Done)
