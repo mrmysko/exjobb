@@ -1,9 +1,9 @@
 param(
     [Parameter(Mandatory = $false)]
-    [string]$BackupPath = ".\GPOBackup",
+    [string]$BackupPath = ".\\GPOBackup",
     
     [Parameter(Mandatory = $false)]
-    [string]$MigTablePath = ".\gpo-migration.migtable",
+    [string]$MigTablePath = ".\\gpo-migration.migtable",
     
     [Parameter(Mandatory = $false)]
     [switch]$WhatIf
@@ -26,101 +26,54 @@ if (-not (Test-Path $MigTablePath)) {
     throw "Migration table not found: $MigTablePath"
 }
 
-# Function to read GPO name from backup
-function Get-GPONameFromBackup {
-    param($BackupFolderPath)
-    
-    $backupXmlPath = Join-Path $BackupFolderPath "Backup.xml"
-    if (Test-Path $backupXmlPath) {
-        try {
-            [xml]$backupInfo = Get-Content $backupXmlPath -ErrorAction Stop
-            return $backupInfo.GroupPolicyBackupScheme.GroupPolicyObject.GroupPolicyCoreSettings.DisplayName.InnerText
-        }
-        catch {
-            Write-Warning "Error reading backup XML: $_"
-            return $null
-        }
+# Function to translate source SIDs to destination SIDs
+function Translate-SID {
+    param($sourceSID, $sourceName)
+    try {
+        $destinationGroup = Get-ADGroup -Filter { Name -eq $sourceName }
+        return $destinationGroup.SID
     }
-    return $null
+    catch {
+        Write-Warning "Could not find a matching group for $sourceName ($sourceSID) in the destination domain."
+        return $null
+    }
 }
 
-# Get all backup folders
-$backupFolders = Get-ChildItem -Path $BackupPath -Directory | 
-Where-Object { $_.Name -match '^[{]?[0-9a-fA-F]{8}-([0-9a-fA-F]{4}-){3}[0-9a-fA-F]{12}[}]?$' }
+# Read migration table and map SIDs
+$migrationTableXml = [xml](Get-Content $MigTablePath)
+$mappings = @{}
 
-$results = @{
-    Successful = @()
-    Failed     = @()
+foreach ($mapping in $migrationTableXml.MigrationTable.Mapping) {
+    $sourceSID = $mapping.Source
+    $destinationName = $mapping.Destination
+    $destinationSID = Translate-SID -sourceSID $sourceSID -sourceName $destinationName
+    if ($destinationSID) {
+        $mappings[$sourceSID] = $destinationSID
+    }
+    else {
+        Write-Warning "No destination SID found for source SID: $sourceSID"
+    }
 }
+
+# Process GPO backups
+$backupFolders = Get-ChildItem -Path $BackupPath -Directory
 
 foreach ($folder in $backupFolders) {
     try {
-        # Get original GPO name from backup
-        $gpoName = Get-GPONameFromBackup -BackupFolderPath $folder.FullName
-        
-        if (-not $gpoName) {
-            Write-Warning "Could not determine GPO name for backup folder: $($folder.Name)"
-            continue
-        }
+        $backupId = $folder.Name
+        $gpoName = (Get-Content (Join-Path $folder.FullName "Backup.xml")).GroupPolicyBackupScheme.GroupPolicyObject.GroupPolicyCoreSettings.DisplayName
 
-        Write-Host "`nProcessing GPO: $gpoName (Backup ID: $($folder.Name))"
-        
+        Write-Host "Processing GPO: $gpoName (Backup ID: $backupId)"
+
         if (-not $WhatIf) {
-            $importParams = @{
-                BackupId       = $folder.Name
-                TargetName     = $gpoName
-                Path           = $BackupPath
-                MigrationTable = $MigTablePath
-                CreateIfNeeded = $true
-            }
-            
-            $importedGpo = Import-GPO @importParams
-            Write-Host "Successfully imported GPO: $gpoName" -ForegroundColor Green
-            $results.Successful += @{
-                Name     = $gpoName
-                BackupId = $folder.Name
-                NewId    = $importedGpo.Id
-            }
+            Import-GPO -BackupId $backupId -Path $BackupPath -MigrationTable $MigTablePath -CreateIfNeeded $true
+            Write-Host "Successfully imported: $gpoName" -ForegroundColor Green
         }
         else {
-            Write-Host "WhatIf: Would import GPO: $gpoName" -ForegroundColor Yellow
+            Write-Host "WhatIf: Would import $gpoName" -ForegroundColor Yellow
         }
     }
     catch {
-        Write-Warning "Failed to import GPO from folder $($folder.Name)"
-        Write-Warning "Error: $_"
-        $results.Failed += @{
-            BackupFolder = $folder.Name
-            GPOName      = $gpoName
-            Error        = $_.Exception.Message
-        }
+        Write-Warning "Failed to import GPO: $_"
     }
 }
-
-# Generate report
-$timestamp = Get-Date -Format "yyyyMMdd_HHmmss"
-$reportContent = @"
-GPO Import Report
-================
-Import Date: $(Get-Date)
-Backup Path: $BackupPath
-Migration Table: $MigTablePath
-WhatIf Mode: $WhatIf
-
-Successfully Imported GPOs:
-$($results.Successful | ForEach-Object { "- GPO Name: $($_.Name)`n  Backup ID: $($_.BackupId)`n  New GPO ID: $($_.NewId)`n" })
-
-Failed Imports:
-$($results.Failed | ForEach-Object { "- GPO Name: $($_.GPOName)`n  Backup Folder: $($_.BackupFolder)`n  Error: $($_.Error)`n" })
-"@
-
-$reportPath = Join-Path $BackupPath "ImportReport_$timestamp.txt"
-$reportContent | Out-File -FilePath $reportPath
-
-# Summary
-Write-Host "`n==========================="
-Write-Host "Import Process Complete"
-Write-Host "==========================="
-Write-Host "Successfully imported: $($results.Successful.Count) GPOs"
-Write-Host "Failed imports: $($results.Failed.Count) GPOs"
-Write-Host "Detailed report saved to: $reportPath"
