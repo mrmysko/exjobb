@@ -18,11 +18,13 @@ Read-only AD-konto för WP
 
 GPO-dokumentation
 
+Isolera hosten på DMZ
+
 Randomize user password and write back to csv
 
 # Security baselines
 
-Lock down SQL
+# Lock down SQL
 
 T0-Admin rättigheter, kan inte ändra Domain GPOer
 
