@@ -12,13 +12,14 @@ Filserver på Windows som automountas via gpoer till Linuxklienter. Folder redir
 
 Definiera brandväggsregler.
 
-Skapa ett nätverksdiagram.
+# Skapa ett nätverksdiagram
 
 Read-only AD-konto för WP
+Specifikt konto för AD-join
 
 GPO-dokumentation
 
-Isolera hosten på DMZ
+# Isolera hosten på DMZ - HyperV Management
 
 Flytta admx filer från C:\Windows\PolicyDefinitions till domän-store
 
@@ -36,13 +37,6 @@ T0-Admin rättigheter, kan inte ändra Domain GPOer
 
 # Scripta Ubuntu Pro i setup-scriptet
 
-Ta bort brandvägg från förstudie
-Lägg till deras router i nuläge
-Mer formell varför vi offererar, ändra rubrik
-Lägg till brandväggsregler för miljön
-Nämns wordpress i vårt lösning
-Virtuella servrar i vår lösning
-
 Teknisk dokumentation:
     - Definiera hårdvara
     - Nätverksarkitektur
@@ -51,6 +45,7 @@ Teknisk dokumentation:
     - Förklara nameswitching
     - Förklara realmd och adsys
     - GPO dokumentation
+    - Specifika Host-inställningar
 
 Docs:
     - Case (Done)
