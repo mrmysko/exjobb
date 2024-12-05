@@ -2,16 +2,21 @@
 
 # Hur ska servrarna administreras? Auto-install SSH? - Parameter i joinscript instllerar openssh + rdp
 
-Lokala kontons lösenord, hur ska dom hanteras? - INga lokala på windows
-
-Köra tjänster på Linux som service AD-konton
+Lokala kontons lösenord, hur ska dom hanteras? - Inga lokala på windows
 
 Definiera brandväggsregler.
 
 # Skapa ett nätverksdiagram
 
 Read-only AD-konto för WP
-Specifikt konto för AD-join
+
+Bas-OU för WP, säkerhet och T1_Admins - WP-cli?
+
+IP-scopes
+
+Serverhårdvara
+
+# Specifikt konto för AD-join - TB_Anna-karinko/T0-Stefanbo
 
 GPO-dokumentation
 
@@ -27,7 +32,7 @@ Flytta admx filer från C:\Windows\PolicyDefinitions till domän-store
 
 # T0-Admin rättigheter, kan inte ändra Domain GPOer - Får va me i Domain Admin
 
-Hur ska man administrera Host-datorerna?
+# Hur ska man administrera Host-datorerna? - Fysiskt i garderoben, dom har internet för uppdateringar
 
 # NTP sync till DC (alla synkar till samma server)
 
@@ -35,8 +40,7 @@ Hur ska man administrera Host-datorerna?
 
 # Scripta Ubuntu Pro i setup-scriptet
 
-It's not a bug, its a feature.
-Säkerhetsgrej - Pre-create TB computers i OUt innan dom får gå med i domän, med TB_admin
+# Säkerhetsgrej - Pre-create TB computers i OUt innan dom får gå med i domän, med TB_admin
 
 Teknisk dokumentation:
     - Definiera hårdvara
@@ -53,7 +57,7 @@ Docs:
     - Case (Done)
     - Tidsplan (Done)
     - Förstudie (Review)
-    - Offert (Pre-review)
+    - Offert (Done)
     - Teknisk Dokumentation
     - Tidsrapport
     - Faktura
@@ -61,9 +65,9 @@ Docs:
 
 Wishlist:
 
-Fileshare med automount på linux
+Autoinstall
 Kerberos SSH
 WP Kerberos sign-on
 GPO Import + Linking
-Windows fileshare med ACL
-Privileged RDP
+Windows fileshare med automount och ACL på Linux
+Privileged RDP - Endast från specifika datorer

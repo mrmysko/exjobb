@@ -6,3 +6,4 @@
 |Users on clients can't change settings|SSSD conf specifies use_fully_qualified_names = False, but profiles are created with FQDN|
 |RPC Server is unavailable||
 |(SSH) Permission denied (gssapi-with-mic)||
+|Gnome Local Password Auth|[Gnome use PolKit](https://serverfault.com/a/998597)||

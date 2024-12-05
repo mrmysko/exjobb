@@ -21,7 +21,7 @@ if [ "$EUID" -ne 0 ]; then
 fi
 
 msg_info "Installing MariaDB"
-if ! (apt -qq update && DEBIAN_FRONTEND=noninteractive apt -qq install mariadb-server); then
+if ! (apt -qq update && DEBIAN_FRONTEND=noninteractive apt -qq install -y mariadb-server); then
     msg_error "Failed to install mariadb"
     exit 1
 fi
