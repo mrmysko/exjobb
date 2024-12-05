@@ -1,51 +1,85 @@
-# Set error action preference and import required module
-$ErrorActionPreference = 'Stop'
-Import-Module GroupPolicy
+param(
+    [Parameter(Mandatory = $true)]
+    [string]$DestinationDomain,
+    
+    [Parameter(Mandatory = $false)]
+    [string]$BackupPath = ".\\GPOBackup",
+    
+    [Parameter(Mandatory = $false)]
+    [string]$MigTablePath = ".\\gpo-migration.migtable"
+)
 
-# Create timestamp for backup folder
-$timestamp = Get-Date -Format "yyyy-MM-dd_HH-mm"
-$backupPath = "C:\GPOBackups\$timestamp"
+# Convert to absolute paths using current directory
+$BackupPath = Join-Path $PWD.Path "GPOBackup"
+$MigTablePath = Join-Path $PWD.Path "gpo-migration.migtable"
+$ReportPath = Join-Path $PWD.Path "GPOReport.html"
 
 # Create backup directory if it doesn't exist
-if (-not (Test-Path $backupPath)) {
-    New-Item -ItemType Directory -Path $backupPath | Out-Null
+if (-not (Test-Path $BackupPath)) {
+    New-Item -ItemType Directory -Path $BackupPath -Force
 }
 
-# Start transcript for logging
-Start-Transcript -Path "$backupPath\GPOExport_Log.txt"
+# Get current domain
+$sourceDomain = (Get-ADDomain).DNSRoot
 
-try {
-    # Get all GPOs in the domain
-    $GPOs = Get-GPO -All
+# Get all AD groups with their SIDs
+$allGroups = Get-ADGroup -Filter * | Select-Object Name, SID
 
-    # Export each GPO
-    foreach ($GPO in $GPOs) {
-        Write-Host "Backing up GPO: $($GPO.DisplayName)"
-        
-        try {
-            Backup-GPO -Name $GPO.DisplayName -Path $backupPath
-            
-            # Export GPO report in XML format for migration
-            Get-GPOReport -Name $GPO.DisplayName -ReportType XML -Path "$backupPath\$($GPO.DisplayName)_Report.xml"
-        }
-        catch {
-            Write-Warning "Failed to backup GPO $($GPO.DisplayName): $_"
-        }
-    }
+# Generate Migration Table with group names and SIDs
+$migrationTable = @"
+<?xml version="1.0" encoding="utf-16"?>
+<MigrationTable xmlns:xsd="http://www.w3.org/2001/XMLSchema" 
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns="http://www.microsoft.com/GroupPolicy/GPOOperations/MigrationTable">
+"@
 
-    # Create manifest file with domain info
-    $domainInfo = Get-ADDomain
-    @{
-        'ExportDate'   = (Get-Date).ToString()
-        'SourceDomain' = $domainInfo.DNSRoot
-        'GPOCount'     = $GPOs.Count
-    } | ConvertTo-Json | Out-File "$backupPath\manifest.json"
-
-    Write-Host "GPO backup completed successfully. Backup location: $backupPath"
+foreach ($group in $allGroups) {
+    $migrationTable += @"
+    <Mapping>
+        <Type>GlobalGroup</Type>
+        <Source>$($group.SID)</Source>
+        <Destination>$($group.Name)</Destination>
+    </Mapping>
+"@
 }
-catch {
-    Write-Error "Export failed: $_"
-}
-finally {
-    Stop-Transcript
-}
+
+$migrationTable += @"
+</MigrationTable>
+"@
+
+# Save migration table using UTF-16 encoding
+[System.IO.File]::WriteAllText($MigTablePath, $migrationTable, [System.Text.Encoding]::Unicode)
+
+# Export GPOs
+Write-Host "Exporting GPOs..."
+$gpos = Get-GPO -All
+
+# Export HTML report of all GPOs
+Get-GPOReport -All -ReportType HTML -Path $ReportPath
+
+# Backup all GPOs
+$backupResult = Backup-GPO -All -Path $BackupPath
+
+# Output results
+Write-Host "`nExport Summary:"
+Write-Host "===================="
+Write-Host "Source domain: $sourceDomain"
+Write-Host "Migration table saved to: $MigTablePath"
+Write-Host "GPO backup location: $BackupPath"
+Write-Host "GPO HTML report: $ReportPath"
+
+# Create a manifest file
+$manifestContent = @"
+GPO Export Manifest
+==================
+Export Date: $(Get-Date)
+Source Domain: $sourceDomain
+Destination Domain: $DestinationDomain
+
+Files:
+- Migration Table: $MigTablePath
+- GPO Backup: $BackupPath
+- GPO Report: $ReportPath
+"@
+
+$manifestContent | Out-File -FilePath (Join-Path $BackupPath "ExportManifest.txt")

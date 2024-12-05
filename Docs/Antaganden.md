@@ -1,0 +1,1 @@
+Antaganden kring DHCP och brandvägg eftersom vi inte kan sätta upp det.

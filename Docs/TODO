@@ -8,8 +8,6 @@ PSOer för användare - Implementera, appliceras dom på Linux också?
 
 Köra tjänster på Linux som service AD-konton
 
-Filserver på Windows som automountas via gpoer till Linuxklienter. Folder redirection?
-
 Definiera brandväggsregler.
 
 # Skapa ett nätverksdiagram
@@ -23,13 +21,15 @@ GPO-dokumentation
 
 Flytta admx filer från C:\Windows\PolicyDefinitions till domän-store
 
-Randomize user password and write back to csv
+# Randomize user password and write back to csv
 
 # Security baselines
 
 # Lock down SQL
 
-T0-Admin rättigheter, kan inte ändra Domain GPOer
+# T0-Admin rättigheter, kan inte ändra Domain GPOer - Får va me i Domain Admin
+
+Hur ska man administrera Host-datorerna?
 
 # NTP sync till DC (alla synkar till samma server)
 
@@ -59,6 +59,7 @@ Docs:
 
 Wishlist:
 
+Fileshare med automount på linux
 Kerberos SSH
 WP Kerberos sign-on
 GPO Import + Linking
