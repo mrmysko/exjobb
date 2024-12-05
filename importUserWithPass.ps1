@@ -39,8 +39,7 @@ function Create-DepartmentOU {
             Write-Host "Created Department OU: $DepartmentName"
         }
         return $ouPath
-    }
-    catch {
+    } catch {
         Write-Error "Error creating Department OU $DepartmentName : $_"
         return $null
     }
@@ -61,65 +60,84 @@ function Create-DepartmentGroup {
             Write-Host "Created Department Group: $groupName"
         }
         return $groupName
-    }
-    catch {
+    } catch {
         Write-Error "Error creating Department Group $groupName : $_"
         return $null
     }
 }
-function Generate-Password {
-    param (
-        [int]$Length = 8
-    )
 
-    $chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"
-    $password = -join ((1..$Length) | ForEach-Object { $chars[(Get-Random -Minimum 0 -Maximum $chars.Length)] })
+function Get-DomainPasswordPolicy {
+    try {
+        $policy = Get-ADDefaultDomainPasswordPolicy
+        return $policy
+    } catch {
+        Write-Error "Unable to retrieve domain password policy: $_"
+        return $null
+    }
+}
+
+function Generate-CompliantPassword {
+    param (
+        [int]$MinLength = 8,
+        [bool]$RequireUppercase = $true,
+        [bool]$RequireLowercase = $true,
+        [bool]$RequireNumber = $true,
+        [bool]$RequireSpecialCharacter = $true
+    )
+    
+    $uppercase = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+    $lowercase = "abcdefghijklmnopqrstuvwxyz"
+    $numbers = "0123456789"
+    $specialChars = "!@#$%^&*()-_=+[]{}|;:,.<>?/"
+
+    $passwordChars = @()
+    if ($RequireUppercase) { $passwordChars += $uppercase }
+    if ($RequireLowercase) { $passwordChars += $lowercase }
+    if ($RequireNumber) { $passwordChars += $numbers }
+    if ($RequireSpecialCharacter) { $passwordChars += $specialChars }
+
+    # Ensure the generated password meets the minimum length and contains at least one of each required character set
+    do {
+        $password = -join ((1..$MinLength) | ForEach-Object { $passwordChars | Get-Random })
+        $valid = $true
+        if ($RequireUppercase -and ($password -notmatch '[A-Z]')) { $valid = $false }
+        if ($RequireLowercase -and ($password -notmatch '[a-z]')) { $valid = $false }
+        if ($RequireNumber -and ($password -notmatch '\d')) { $valid = $false }
+        if ($RequireSpecialCharacter -and ($password -notmatch '[!@#$%^&*()\-_=+[\]{}|;:,.<>?/\\]')) { $valid = $false }
+    } while (-not $valid)
+
     return $password
 }
 
-# Path to the input and output CSV files
-$inputCsv = "./users.csv"
-$outputCsv = "./userpass.csv"
-
-# Read the input CSV file with proper encoding (UTF-8 or default to ensure no characters are lost)
-$csvData = Import-Csv -Path $inputCsv -Encoding UTF8
-
-# Prepare the header and add the "Password" column to each row
-$csvData | ForEach-Object {
-    $_ | Add-Member -MemberType NoteProperty -Name "password" -Value (Generate-Password)
+# Retrieve domain password policy
+$passwordPolicy = Get-DomainPasswordPolicy
+if ($passwordPolicy) {
+    $minLength = $passwordPolicy.MinPasswordLength
+    $requireUppercase = $passwordPolicy.ComplexityEnabled
+    $requireLowercase = $passwordPolicy.ComplexityEnabled
+    $requireNumber = $passwordPolicy.ComplexityEnabled
+    $requireSpecialCharacter = $passwordPolicy.ComplexityEnabled
 }
 
-# Export the modified data to a new CSV file with UTF-8 encoding to preserve characters
-$csvData | Export-Csv -Path $outputCsv -NoTypeInformation -Encoding UTF8
-
-
 try {
-    # Get domain information
     $domain = Get-ADDomain
     $domainDN = $domain.DistinguishedName
     $domainName = $domain.DNSRoot
     
-    # Construct the paths for the new structure
     $usersOUPath = "OU=Users,OU=Tier Base,$domainDN"
     $groupsOUPath = "OU=Groups,OU=Tier Base,$domainDN"
     
-    # Verify the OUs exist
     try {
         Get-ADOrganizationalUnit $usersOUPath
         Get-ADOrganizationalUnit $groupsOUPath
-    }
-    catch {
+    } catch {
         Write-Error "Required OUs not found. Please run CreateOU.ps1 first."
         exit 1
     }
     
-    # Import CSV
     $users = Import-Csv -Path $CsvPath
-    
-    # Create a hashtable to track departments and their groups
     $departmentGroups = @{}
     
-    # First pass: Create department OUs and groups
     $users | ForEach-Object {
         $departments = $_.department -split '\s+'
         foreach ($dept in $departments) {
@@ -135,28 +153,23 @@ try {
         }
     }
     
-    # Second pass: Create users
     foreach ($user in $users) {
-        # Clean the names and create UPN
         $cleanFirstName = Remove-SpecialCharacters -String $user.firstname
         $cleanLastName = Remove-SpecialCharacters -String $user.surname
         $upnPrefix = "$cleanFirstName$($cleanLastName.Substring(0,2))".ToLower()
         $upn = "$upnPrefix@$domainName"
         
-        # Create display name and sam account name
         $displayName = "$($user.firstname) $($user.surname)"
         $samAccountName = $upnPrefix
         
-        # Check if user already exists
         $existingUser = Get-ADUser -Filter "SamAccountName -eq '$samAccountName'" -ErrorAction SilentlyContinue
         
         if ($existingUser) {
             Write-Host "User $displayName already exists, updating group memberships..."
             $adUser = $existingUser
-        }
-        else {
-            # Create new user
+        } else {
             try {
+                $password = Generate-CompliantPassword -MinLength $minLength -RequireUppercase $requireUppercase -RequireLowercase $requireLowercase -RequireNumber $requireNumber -RequireSpecialCharacter $requireSpecialCharacter
                 $newUserParams = @{
                     Name                  = $displayName
                     GivenName             = $user.firstname
@@ -170,27 +183,24 @@ try {
                     OfficePhone           = $user.phone
                     Enabled               = $true
                     ChangePasswordAtLogon = $true
-                    AccountPassword       = $password
+                    AccountPassword       = (ConvertTo-SecureString -AsPlainText $password -Force)
                 }
                 
                 $adUser = New-ADUser @newUserParams -PassThru
                 Write-Host "Created user: $displayName with UPN: $upn"
-            }
-            catch {
+            } catch {
                 Write-Error "Error creating user $displayName : $_"
                 continue
             }
         }
         
-        # Add user to department groups
         $departments = $user.department -split '\s+'
         foreach ($dept in $departments) {
             if ($departmentGroups.ContainsKey($dept)) {
                 try {
                     Add-ADGroupMember -Identity $departmentGroups[$dept] -Members $adUser.SamAccountName -ErrorAction SilentlyContinue
                     Write-Host "Added $displayName to group $($departmentGroups[$dept])"
-                }
-                catch {
+                } catch {
                     Write-Error "Error adding $displayName to group $($departmentGroups[$dept]): $_"
                 }
             }
@@ -198,7 +208,6 @@ try {
     }
     
     Write-Host "`nUser import and group assignments completed successfully!"
-}
-catch {
+} catch {
     Write-Error "An error occurred during user import: $_"
 }
