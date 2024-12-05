@@ -47,7 +47,7 @@ chmod +x wp-cli.phar
 mv wp-cli.phar /usr/local/bin/wp
 
 wp --allow-root --path="${WP_PATH}" config create --dbhost="${MYSQL_DB_HOST}" --dbuser="${MYSQL_USER}" --dbpass="${WP_ADMIN_PASS}" --dbname="${MYSQL_DATABASE}"
-wp --allow-root --path="${WP_PATH}" core install --url="www.${DOMAIN}" --admin_email="admin@${DOMAIN}" --title="Homepage" --admin_user="${WP_ADMIN_USER}" --admin_password="${WP_ADMIN_PASSWORD}"
+wp --allow-root --path="${WP_PATH}" core install --url="wordpress.${DOMAIN}" --admin_email="admin@${DOMAIN}" --title="Homepage" --admin_user="${WP_ADMIN_USER}" --admin_password="${WP_ADMIN_PASSWORD}"
 wp --allow-root --path="${WP_PATH}" plugin install next-active-directory-integration
 
 # Configure Apache

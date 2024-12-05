@@ -3,7 +3,7 @@
 # Usage: sudo bash -c "$(wget -qLO - https://raw.githubusercontent.com/mrmysko/exjobb/refs/heads/main/linuxJoin.sh)"
 
 
-DOMAIN_USER="Administrator"
+DOMAIN_USER="TB-Anna-karinko"
 INSTALL_SSH=false
 DOMAIN=""
 
@@ -21,6 +21,7 @@ while [[ $# -gt 0 ]]; do
     case $1 in
         -server)
             INSTALL_SSH=true
+            DOMAIN_USER="T0-Stefanbo"
             shift
             ;;
         -domain)

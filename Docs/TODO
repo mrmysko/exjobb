@@ -2,9 +2,7 @@
 
 # Hur ska servrarna administreras? Auto-install SSH? - Parameter i joinscript instllerar openssh + rdp
 
-Lokala kontons lösenord, hur ska dom hanteras?
-
-PSOer för användare - Implementera, appliceras dom på Linux också?
+Lokala kontons lösenord, hur ska dom hanteras? - INga lokala på windows
 
 Köra tjänster på Linux som service AD-konton
 
@@ -37,6 +35,9 @@ Hur ska man administrera Host-datorerna?
 
 # Scripta Ubuntu Pro i setup-scriptet
 
+It's not a bug, its a feature.
+Säkerhetsgrej - Pre-create TB computers i OUt innan dom får gå med i domän, med TB_admin
+
 Teknisk dokumentation:
     - Definiera hårdvara
     - Nätverksarkitektur
@@ -46,6 +47,7 @@ Teknisk dokumentation:
     - Förklara realmd och adsys
     - GPO dokumentation
     - Specifika Host-inställningar
+    - PSO+Default domain
 
 Docs:
     - Case (Done)
