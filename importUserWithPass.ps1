@@ -9,7 +9,6 @@ function Remove-SpecialCharacters {
     param(
         [string]$String
     )
-    # Remove special characters and diacritics
     $normalized = $String.Normalize('FormD')
     $sb = New-Object System.Text.StringBuilder
     
@@ -96,7 +95,6 @@ function Generate-CompliantPassword {
     if ($RequireNumber) { $passwordChars += $numbers }
     if ($RequireSpecialCharacter) { $passwordChars += $specialChars }
 
-    # Ensure the generated password meets the minimum length and contains at least one of each required character set
     do {
         $password = -join ((1..$MinLength) | ForEach-Object { $passwordChars | Get-Random })
         $valid = $true
@@ -109,7 +107,6 @@ function Generate-CompliantPassword {
     return $password
 }
 
-# Retrieve domain password policy
 $passwordPolicy = Get-DomainPasswordPolicy
 if ($passwordPolicy) {
     $minLength = $passwordPolicy.MinPasswordLength
@@ -137,6 +134,7 @@ try {
     
     $users = Import-Csv -Path $CsvPath
     $departmentGroups = @{}
+    $userPasswordList = @()
     
     $users | ForEach-Object {
         $departments = $_.department -split '\s+'
@@ -188,6 +186,14 @@ try {
                 
                 $adUser = New-ADUser @newUserParams -PassThru
                 Write-Host "Created user: $displayName with UPN: $upn"
+                
+                $userPasswordList += [PSCustomObject]@{
+                    FirstName  = $user.firstname
+                    LastName   = $user.surname
+                    UserName   = $samAccountName
+                    Password   = $password
+                    UPN        = $upn
+                }
             } catch {
                 Write-Error "Error creating user $displayName : $_"
                 continue
@@ -207,6 +213,8 @@ try {
         }
     }
     
+    $userPasswordList | Export-Csv -Path "./userpass.csv" -NoTypeInformation -Encoding UTF8
+    Write-Host "User and password information has been saved to userpass.csv"
     Write-Host "`nUser import and group assignments completed successfully!"
 } catch {
     Write-Error "An error occurred during user import: $_"
