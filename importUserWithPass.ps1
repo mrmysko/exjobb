@@ -47,25 +47,26 @@ function Generate-RandomPassword {
     param(
         [int]$Length = 14
     )
-    $uppercase = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-    $lowercase = "abcdefghijklmnopqrstuvwxyz"
-    $numbers = "0123456789"
-    $specialChars = "!@#$%^&*()-_=+[]{}|;:,.<>?/"
-
-    $passwordChars = @($uppercase, $lowercase, $numbers, $specialChars) -join ""
-    $password = -join ((1..$Length) | ForEach-Object { $passwordChars | Get-Random })
     
-    # Ensure password meets complexity requirements
-    while (
-        ($password -notmatch '[A-Z]') -or
-        ($password -notmatch '[a-z]') -or
-        ($password -notmatch '\d') -or
-        ($password -notmatch '[!@#$%^&*()\-_=+\[\]{}|;:,.<>?/]')
-    ) {
-        $password = -join ((1..$Length) | ForEach-Object { $passwordChars | Get-Random })
-    }
+    # Ensure at least one character from each required set
+    $uppercase = (Get-Random -InputObject ([char[]](65..90))) # A-Z
+    $lowercase = (Get-Random -InputObject ([char[]](97..122))) # a-z
+    $number = (Get-Random -InputObject ([char[]](48..57))) # 0-9
+    $special = (Get-Random -InputObject ([char[]]"!@#$%^&*()-_=+[]{}|;:,.<>?/".ToCharArray()))
     
-    return $password
+    # Calculate remaining length needed
+    $remainingLength = $Length - 4
+    
+    # Generate remaining random characters
+    $allChars = [char[]](65..90) + [char[]](97..122) + [char[]](48..57) + "!@#$%^&*()-_=+[]{}|;:,.<>?/".ToCharArray()
+    $remainingChars = -join ((1..$remainingLength) | ForEach-Object { Get-Random -InputObject $allChars })
+    
+    # Combine all parts and shuffle
+    $password = $uppercase + $lowercase + $number + $special + $remainingChars
+    $passwordArray = $password.ToCharArray()
+    $shuffledPassword = -join ($passwordArray | Get-Random -Count $passwordArray.Length)
+    
+    return $shuffledPassword
 }
 
 try {
@@ -75,6 +76,14 @@ try {
     
     $usersOUPath = "OU=Users,OU=Tier Base,$domainDN"
     $groupsOUPath = "OU=Groups,OU=Tier Base,$domainDN"
+    
+    # Create output directory if it doesn't exist
+    $outputDir = Join-Path -Path $PSScriptRoot -ChildPath "output"
+    if (-not (Test-Path -Path $outputDir)) {
+        New-Item -ItemType Directory -Path $outputDir | Out-Null
+    }
+    
+    $outputPath = Join-Path -Path $outputDir -ChildPath "userpass.csv"
     
     try {
         Get-ADOrganizationalUnit $usersOUPath
@@ -162,8 +171,14 @@ try {
         }
     }
     
-    $userPasswordList | Export-Csv -Path "./userpass.csv" -NoTypeInformation -Encoding UTF8
-    Write-Host "User and password information has been saved to userpass.csv"
+    # Export the password list with explicit encoding and path
+    if ($userPasswordList.Count -gt 0) {
+        $userPasswordList | Export-Csv -Path $outputPath -NoTypeInformation -Encoding UTF8
+        Write-Host "User and password information has been saved to $outputPath"
+    } else {
+        Write-Warning "No new users were created, userpass.csv was not generated"
+    }
+    
     Write-Host "`nUser import and group assignments completed successfully!"
 } catch {
     Write-Error "An error occurred during user import: $_"
