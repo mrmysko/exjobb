@@ -22,40 +22,18 @@ function Remove-SpecialCharacters {
     return $sb.ToString() -replace '[^a-zA-Z0-9\-]', ''
 }
 
-function Create-DepartmentOU {
-    param(
-        [string]$DepartmentName,
-        [string]$GroupsPath,
-        [bool]$EnableDeleteProtection = $true
-    )
-    
-    try {
-        $ouPath = "OU=$DepartmentName,$GroupsPath"
-        $ouExists = Get-ADOrganizationalUnit -Filter "Name -eq '$DepartmentName'" -SearchBase $GroupsPath -SearchScope OneLevel -ErrorAction SilentlyContinue
-        
-        if (-not $ouExists) {
-            New-ADOrganizationalUnit -Name $DepartmentName -Path $GroupsPath -ProtectedFromAccidentalDeletion $EnableDeleteProtection
-            Write-Host "Created Department OU: $DepartmentName"
-        }
-        return $ouPath
-    } catch {
-        Write-Error "Error creating Department OU $DepartmentName : $_"
-        return $null
-    }
-}
-
 function Create-DepartmentGroup {
     param(
         [string]$DepartmentName,
-        [string]$OUPath
+        [string]$GroupsOUPath
     )
     
     try {
         $groupName = "$DepartmentName"
-        $groupExists = Get-ADGroup -Filter "Name -eq '$groupName'" -SearchBase $OUPath -SearchScope OneLevel -ErrorAction SilentlyContinue
+        $groupExists = Get-ADGroup -Filter "Name -eq '$groupName'" -SearchBase $GroupsOUPath -SearchScope OneLevel -ErrorAction SilentlyContinue
         
         if (-not $groupExists) {
-            New-ADGroup -Name $groupName -GroupScope Global -GroupCategory Security -Path $OUPath
+            New-ADGroup -Name $groupName -GroupScope Global -GroupCategory Security -Path $GroupsOUPath
             Write-Host "Created Department Group: $groupName"
         }
         return $groupName
@@ -65,55 +43,29 @@ function Create-DepartmentGroup {
     }
 }
 
-function Get-DomainPasswordPolicy {
-    try {
-        $policy = Get-ADDefaultDomainPasswordPolicy
-        return $policy
-    } catch {
-        Write-Error "Unable to retrieve domain password policy: $_"
-        return $null
-    }
-}
-
-function Generate-CompliantPassword {
-    param (
-        [int]$MinLength = 8,
-        [bool]$RequireUppercase = $true,
-        [bool]$RequireLowercase = $true,
-        [bool]$RequireNumber = $true,
-        [bool]$RequireSpecialCharacter = $true
+function Generate-RandomPassword {
+    param(
+        [int]$Length = 14
     )
-    
     $uppercase = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
     $lowercase = "abcdefghijklmnopqrstuvwxyz"
     $numbers = "0123456789"
     $specialChars = "!@#$%^&*()-_=+[]{}|;:,.<>?/"
 
-    $passwordChars = @()
-    if ($RequireUppercase) { $passwordChars += $uppercase }
-    if ($RequireLowercase) { $passwordChars += $lowercase }
-    if ($RequireNumber) { $passwordChars += $numbers }
-    if ($RequireSpecialCharacter) { $passwordChars += $specialChars }
-
-    do {
-        $password = -join ((1..$MinLength) | ForEach-Object { $passwordChars | Get-Random })
-        $valid = $true
-        if ($RequireUppercase -and ($password -notmatch '[A-Z]')) { $valid = $false }
-        if ($RequireLowercase -and ($password -notmatch '[a-z]')) { $valid = $false }
-        if ($RequireNumber -and ($password -notmatch '\d')) { $valid = $false }
-        if ($RequireSpecialCharacter -and ($password -notmatch '[!@#$%^&*()\-_=+[\]{}|;:,.<>?/\\]')) { $valid = $false }
-    } while (-not $valid)
-
+    $passwordChars = @($uppercase, $lowercase, $numbers, $specialChars) -join ""
+    $password = -join ((1..$Length) | ForEach-Object { $passwordChars | Get-Random })
+    
+    # Ensure password meets complexity requirements
+    while (
+        ($password -notmatch '[A-Z]') -or
+        ($password -notmatch '[a-z]') -or
+        ($password -notmatch '\d') -or
+        ($password -notmatch '[!@#$%^&*()\-_=+\[\]{}|;:,.<>?/]')
+    ) {
+        $password = -join ((1..$Length) | ForEach-Object { $passwordChars | Get-Random })
+    }
+    
     return $password
-}
-
-$passwordPolicy = Get-DomainPasswordPolicy
-if ($passwordPolicy) {
-    $minLength = $passwordPolicy.MinPasswordLength
-    $requireUppercase = $passwordPolicy.ComplexityEnabled
-    $requireLowercase = $passwordPolicy.ComplexityEnabled
-    $requireNumber = $passwordPolicy.ComplexityEnabled
-    $requireSpecialCharacter = $passwordPolicy.ComplexityEnabled
 }
 
 try {
@@ -136,16 +88,13 @@ try {
     $departmentGroups = @{}
     $userPasswordList = @()
     
-    $users | ForEach-Object {
-        $departments = $_.department -split '\s+'
+    foreach ($user in $users) {
+        $departments = $user.department -split '\s+'
         foreach ($dept in $departments) {
             if (-not $departmentGroups.ContainsKey($dept)) {
-                $ouPath = Create-DepartmentOU -DepartmentName $dept -GroupsPath $groupsOUPath
-                if ($ouPath) {
-                    $groupName = Create-DepartmentGroup -DepartmentName $dept -OUPath $ouPath
-                    if ($groupName) {
-                        $departmentGroups[$dept] = $groupName
-                    }
+                $groupName = Create-DepartmentGroup -DepartmentName $dept -GroupsOUPath $groupsOUPath
+                if ($groupName) {
+                    $departmentGroups[$dept] = $groupName
                 }
             }
         }
@@ -167,7 +116,7 @@ try {
             $adUser = $existingUser
         } else {
             try {
-                $password = Generate-CompliantPassword -MinLength $minLength -RequireUppercase $requireUppercase -RequireLowercase $requireLowercase -RequireNumber $requireNumber -RequireSpecialCharacter $requireSpecialCharacter
+                $password = Generate-RandomPassword -Length 14
                 $newUserParams = @{
                     Name                  = $displayName
                     GivenName             = $user.firstname
