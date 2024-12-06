@@ -14,7 +14,42 @@ Bas-OU för WP, säkerhet och T1_Admins - WP-cli?
 
 IP-scopes
 
+Hårdvara - Raid 1?
+
 Serverhårdvara
+
+Server1 (Newer):
+Intel Xeon W-1350, 6c/12t 5Ghz
+2x16 GB DDR4 ECC RAM 3200 Mhz
+2x512GB NVME SSD (Raid 1)
+600W Gold PSU
+
+DC1:
+4 vCPU
+4 GB RAM
+60 GB Storage
+SQL:
+4 vCPU
+8 GB RAM (fixed)
+80 GB Storage
+
+Server2 (Older):
+Intel Xeon E-2144G, 4c/8t 4,5Ghz
+2x16 GB DDR4 ECC RAM 2666 Mhz
+2x256 GB SATA SSD (Raid 1)
+600W Gold PSU
+TP-Link TX201 (Extra NIC)
+
+DC2:
+4 vCPU
+4 GB RAM
+60 GB Storage
+WP:
+4 vCPU
+8 GB RAM
+80 GB Storage
+
+WP-bruteforce, plugin?
 
 # Specifikt konto för AD-join - TB_Anna-karinko/T0-Stefanbo
 

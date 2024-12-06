@@ -16,3 +16,7 @@ Ports:  - LDAP  - TCP/389, UDP/389, TCP/UDP 3268 (Global Catalog)
         - SMB   - TCP/445
         - RPC   - TCP/135
 <https://www.reddit.com/r/sysadmin/comments/vlwjtn/which_ports_are_required_for_a_ad_over_a_vlans/>
+
+Vad är utgångspunkten?
+Blockera all trafik från internet till båda subnät?
+Blockera all trafik mellan interna subnät?
