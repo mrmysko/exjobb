@@ -7,3 +7,4 @@
 |RPC Server is unavailable||
 |(SSH) Permission denied (gssapi-with-mic)||
 |Gnome Local Password Auth|[Gnome use PolKit](https://serverfault.com/a/998597)||
+|WordPress Publish
