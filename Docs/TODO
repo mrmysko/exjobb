@@ -12,7 +12,7 @@ Read-only AD-konto för WP
 
 Bas-OU för WP, säkerhet och T1_Admins - WP-cli?
 
-IP-scopes
+# IP-scopes
 
 WP-bruteforce, plugin?
 
@@ -66,10 +66,11 @@ Docs:
 
 Wishlist:
 
+Failover cluster
 Autoinstall
 Kerberos SSH
 WP Kerberos sign-on
-GPO Import + Linking
+GPO Import + Linking script
 Windows fileshare med automount och ACL på Linux
 Privileged RDP - Endast från specifika datorer
 Folder redirection, alla kan jobba på olika datorer men ha kvar docs. (Kräver filserver)
