@@ -72,3 +72,4 @@ WP Kerberos sign-on
 GPO Import + Linking
 Windows fileshare med automount och ACL på Linux
 Privileged RDP - Endast från specifika datorer
+Folder redirection, alla kan jobba på olika datorer men ha kvar docs. (Kräver filserver)
