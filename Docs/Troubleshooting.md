@@ -7,4 +7,5 @@
 |RPC Server is unavailable||
 |(SSH) Permission denied (gssapi-with-mic)||
 |Gnome Local Password Auth|[Gnome use PolKit](https://serverfault.com/a/998597)||
-|WordPress Publish
+|WordPress Publish, "Updating failed. The response is not a valid JSON response"|||
+|PolicyDefinitions Permission Denied|Trying to copy files to the domain-shared SYSVOL|Copy files to the local SYSVOL folder|
