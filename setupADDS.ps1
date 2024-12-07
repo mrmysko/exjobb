@@ -57,10 +57,26 @@ catch {
         Register-ScheduledTask -TaskName "InstallDHCP" -Action $action -User "SYSTEM" -RunLevel Highest -Trigger (New-ScheduledTaskTrigger -AtStartup)
     }
     
-    # Create scheduled task to copy PolicyDefinitions after AD DS installation
+    # Create scheduled task for new forest setup operations (PolicyDefinitions and reverse DNS)
     $scriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
-    $policyAction = New-ScheduledTaskAction -Execute 'Powershell.exe' -Argument "-NoProfile -ExecutionPolicy Bypass -Command `"
+    $setupAction = New-ScheduledTaskAction -Execute 'Powershell.exe' -Argument "-NoProfile -ExecutionPolicy Bypass -Command `"
         Start-Sleep -Seconds 60;
+        
+        # Setup reverse lookup zone for new forest
+        `$ipAddress = (Get-NetIPAddress -AddressFamily IPv4 | Where-Object { `$_.InterfaceAlias -notmatch 'Loopback' -and `$_.IPAddress -notmatch '^169' } | Select-Object -First 1).IPAddress
+        if (`$ipAddress) {
+            `$networkId = `$ipAddress.Split('.')[0..2] -join '.'
+            try {
+                Add-DnsServerPrimaryZone -NetworkID `"`$networkId.0/24`" -ReplicationScope 'Domain' -DynamicUpdate 'Secure'
+                Write-Host `"Successfully created reverse lookup zone for `$networkId.0/24`"
+            } catch {
+                Write-Warning `"Failed to create reverse lookup zone: `$_`"
+            }
+        } else {
+            Write-Warning `"No suitable IP address found for reverse zone creation`"
+        }
+
+        # Copy PolicyDefinitions
         `$destinationPath = 'C:\Windows\SYSVOL\sysvol\$DomainName\Policies\PolicyDefinitions';
         `$scriptDir = '$scriptDir';
         
@@ -83,9 +99,9 @@ catch {
                 Copy-Item -Path `"`$scriptDir\Ubuntu.adml`" -Destination `"`$enUsPath\Ubuntu.adml`" -Force;
             }
         }
-        Unregister-ScheduledTask -TaskName CopyPolicyDefs -Confirm:`$false
+        Unregister-ScheduledTask -TaskName NewForestSetup -Confirm:`$false
     `""
-    Register-ScheduledTask -TaskName "CopyPolicyDefs" -Action $policyAction -User "SYSTEM" -RunLevel Highest -Trigger (New-ScheduledTaskTrigger -AtStartup)
+    Register-ScheduledTask -TaskName "NewForestSetup" -Action $setupAction -User "SYSTEM" -RunLevel Highest -Trigger (New-ScheduledTaskTrigger -AtStartup)
     
     Install-ADDSForest -InstallDns -DomainName $DomainName -SafeModeAdministratorPassword $securePassword -Confirm:$false -Force
 }

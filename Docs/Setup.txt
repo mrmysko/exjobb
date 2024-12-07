@@ -3,9 +3,7 @@ DC:
 2. Run setupADDS.ps1
 3. Authorize DHCP Server
 4. Create DHCP scope
-4. Create a reverse ptr zone
-4. Run createOU.ps1
-5. Install admx files in <domain>/sysvol/<domain>/Policies/PolicyDefinitions
+5. Run createOU.ps1
 6. Run importUsers.ps1
 7. Install Security baseline GPOs
 8. Create custom GPOs (see docs)

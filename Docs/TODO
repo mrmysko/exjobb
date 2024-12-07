@@ -3,6 +3,7 @@
 # Hur ska servrarna administreras? Auto-install SSH? - Parameter i joinscript instllerar openssh + rdp
 
 Lokala kontons lösenord, hur ska dom hanteras? - Inga lokala på windows
+Gnome lokal user prompt
 
 Definiera brandväggsregler.
 
@@ -22,7 +23,7 @@ GPO-dokumentation
 
 # Isolera hosten på DMZ - HyperV Management
 
-Flytta admx filer från C:\Windows\PolicyDefinitions till domän-store
+# Flytta admx filer från C:\Windows\PolicyDefinitions till domän-store
 
 # Randomize user password and write back to csv
 
