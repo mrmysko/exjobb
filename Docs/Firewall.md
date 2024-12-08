@@ -15,6 +15,7 @@ Ports:  - LDAP  - TCP/389, UDP/389, TCP/UDP 3268 (Global Catalog)
         - Kerb  - TCP/88, UDP/88
         - SMB   - TCP/445
         - RPC   - TCP/135
+        - RDP   - TCP/3389
 <https://www.reddit.com/r/sysadmin/comments/vlwjtn/which_ports_are_required_for_a_ad_over_a_vlans/>
 
 Vad är utgångspunkten?
