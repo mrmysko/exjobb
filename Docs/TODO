@@ -9,9 +9,9 @@ Definiera brandväggsregler.
 
 # Skapa ett nätverksdiagram
 
-Read-only AD-konto för WP
+# Read-only AD-konto för WP
 
-Bas-OU för WP, säkerhet och T1_Admins - WP-cli?
+# Bas-OU för WP, säkerhet och T1_Admins - WP-cli?
 
 Linux access GPO för T0 servers
 
@@ -19,9 +19,13 @@ Linux access GPO för T0 servers
 
 WP-bruteforce, plugin?
 
+WP password sync, timer?
+
 # Specifikt konto för AD-join - TB_Anna-karinko/T0-Stefanbo
 
 GPO-dokumentation
+
+Apache2 config - redirect
 
 # Isolera hosten på DMZ - HyperV Management
 

@@ -27,7 +27,8 @@ fi
 # Install dependencies
 msg_info "Installing dependencies"
 if ! (apt -qq update && DEBIAN_FRONTEND=noninteractive apt -qq install -y \
-    apache2 libapache2-mod-php php-mysql php-ldap php-mbstring); then
+    apache2 libapache2-mod-php php-mysql php-ldap php-mbstring php-gd php-curl \
+    php-imagick php-xml php-zip php-intl); then
     msg_error "Failed to install dependencies"
     exit 1
 fi
@@ -49,6 +50,7 @@ wp --allow-root --path="${WP_PATH}" config create --dbhost="${MYSQL_DB_HOST}" --
 wp --allow-root --path="${WP_PATH}" core install --url="wordpress.${DOMAIN}" --admin_email="admin@${DOMAIN}" --title="Homepage" --admin_user="${WP_ADMIN_USER}" --admin_password="${WP_ADMIN_PASS}"
 wp --allow-root --path="${WP_PATH}" plugin install next-active-directory-integration
 wp --allow-root --path="${WP_PATH}" plugin activate next-active-directory-integration
+wp --allow-root --path="${WP_PATH}" plugin uninstall hello akismet
 
 # Configure Apache
 msg_info "Configuring Apache"
