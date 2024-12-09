@@ -2,7 +2,8 @@
 
 # Hur ska servrarna administreras? Auto-install SSH? - Parameter i joinscript instllerar openssh + rdp
 
-Lokala kontons lösenord, hur ska dom hanteras? - Inga lokala på windows
+# Lokala kontons lösenord, hur ska dom hanteras? - Inga lokala på windows, lokalt konto har inte admin på linux
+
 Gnome lokal user prompt
 
 Definiera brandväggsregler.
@@ -13,7 +14,7 @@ Definiera brandväggsregler.
 
 # Bas-OU för WP, säkerhet och T1_Admins - WP-cli?
 
-Linux access GPO för T0 servers
+# Linux access GPO för T0 servers
 
 # IP-scopes
 
@@ -21,11 +22,11 @@ WP-bruteforce, plugin?
 
 WP password sync, timer?
 
+WP - remove default admin
+
 # Specifikt konto för AD-join - TB_Anna-karinko/T0-Stefanbo
 
-GPO-dokumentation
-
-Apache2 config - redirect
+# GPO-dokumentation
 
 # Isolera hosten på DMZ - HyperV Management
 
