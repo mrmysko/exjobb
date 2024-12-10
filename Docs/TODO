@@ -6,7 +6,14 @@
 
 Gnome lokal user prompt
 
-Definiera brandväggsregler.
+VMs native vlan 1
+SwitchPort i trunk-läge
+Hostarna vlan 90
+Aktivera vlan identification i hyperv switch settings
+Aktivera vlan identification på vms nic (annat vlan än hyperv switch settings)
+
+
+# Definiera brandväggsregler.
 
 # Skapa ett nätverksdiagram
 
@@ -74,6 +81,8 @@ Docs:
 
 Wishlist:
 
+DHCP Failover
+HTTPS WordPress
 Failover cluster
 Autoinstall
 Kerberos SSH
@@ -81,4 +90,5 @@ WP Kerberos sign-on
 GPO Import + Linking script
 Windows fileshare med automount och ACL på Linux
 Privileged RDP - Endast från specifika datorer
+Hyper-V VLAN Stuff
 Folder redirection, alla kan jobba på olika datorer men ha kvar docs. (Kräver filserver)
