@@ -4,7 +4,7 @@
 
 # Lokala kontons lösenord, hur ska dom hanteras? - Inga lokala på windows, lokalt konto har inte admin på linux
 
-Gnome lokal user prompt
+# Gnome lokal user prompt
 
 VMs native vlan 1
 SwitchPort i trunk-läge
@@ -12,8 +12,8 @@ Hostarna vlan 90
 Aktivera vlan identification i hyperv switch settings
 Aktivera vlan identification på vms nic (annat vlan än hyperv switch settings)
 
-rpcbind - ports 49152-65535, 135
-kbpasswd - port 464
+# rpcbind - ports 49152-65535, 135
+# kbpasswd - port 464
 
 About domain join - Administrator or pre-create
 

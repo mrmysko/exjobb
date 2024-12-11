@@ -16,6 +16,7 @@
 |Flush Kerberos ticket cache|```kdestroy```|
 |List all domain groups|```wbinfo -g```|
 |List all domain users|```wbinfo -u```|
+|List adsys timers|```systemctl list-timers```|
 
 adcli - Perform actions in Active Directory
 

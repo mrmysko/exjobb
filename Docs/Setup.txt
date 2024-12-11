@@ -10,6 +10,7 @@ DC:
 8. Create custom GPOs (see docs)
 9. Link GPOs
 10. Enable RDP
+11. Create Ubuntu/scripts in SYSVOL
 
 Client:
 1. Install ubuntu
