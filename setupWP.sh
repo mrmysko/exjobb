@@ -57,8 +57,11 @@ msg_info "Configuring Apache"
 a2dissite 000-default.conf
 
 # Create Apache configuration for WordPress
-cat >/etc/apache2/sites-available/wordpress.conf <<'EOF'
-<VirtualHost *:80>
+cat >/etc/apache2/sites-available/wordpress.conf <<EOF
+<VirtualHost _default_:443>
+    SSLEngine On
+    SSLCertificateFile /etc/apache2/certs/wp-cert.pem
+    SSLCertificateKeyFile /etc/apache2/certs/wp-key.pem
     DocumentRoot /var/www/wordpress
     <Directory /var/www/wordpress>
         Options FollowSymLinks
@@ -71,11 +74,16 @@ cat >/etc/apache2/sites-available/wordpress.conf <<'EOF'
         Require all granted
     </Directory>
 </VirtualHost>
+
+<VirtualHost *:80>
+    Redirect 301 / https://$(hostname).${DOMAIN}
+</VirtualHost>
 EOF
 
 # Enable required modules
 a2enmod rewrite
 a2enmod php
+a2enmod ssl
 
 # Enable WordPress site
 a2ensite wordpress.conf
@@ -84,6 +92,13 @@ a2ensite wordpress.conf
 msg_info "Setting permissions"
 chown -R www-data:www-data "${WP_PATH}"
 chmod -R 755 "${WP_PATH}"
+
+# Generate certificate
+mkdir /etc/apache2/certs
+chmod 700 /etc/apache2/certs
+openssl req -x509 -newkey rsa:4096 -keyout /etc/apache2/certs/wp-key.pem \
+    -out /etc/apache2/certs/wp-cert.pem -sha256 -days 3560 -nodes \
+    -subj "/C=SE/ST=Stockholm/L=Solna/O=DesignDreamers/OU=DD/CN=$(hostname).${DOMAIN}"
 
 # Restart Apache
 msg_info "Restarting Apache"

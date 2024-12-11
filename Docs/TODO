@@ -13,9 +13,10 @@ Aktivera vlan identification i hyperv switch settings
 Aktivera vlan identification på vms nic (annat vlan än hyperv switch settings)
 
 # rpcbind - ports 49152-65535, 135
+
 # kbpasswd - port 464
 
-About domain join - Administrator or pre-create
+# About domain join - Administrator or pre-create
 
 # Definiera brandväggsregler
 
@@ -76,7 +77,7 @@ Docs:
 Wishlist:
 
 DHCP Failover
-HTTPS WordPress
+Trusted CA certs
 Failover cluster
 Autoinstall
 Kerberos SSH
