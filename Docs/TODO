@@ -12,8 +12,12 @@ Hostarna vlan 90
 Aktivera vlan identification i hyperv switch settings
 Aktivera vlan identification på vms nic (annat vlan än hyperv switch settings)
 
+rpcbind - ports 49152-65535, 135
+kbpasswd - port 464
 
-# Definiera brandväggsregler.
+About domain join - Administrator or pre-create
+
+# Definiera brandväggsregler
 
 # Skapa ett nätverksdiagram
 
@@ -29,7 +33,9 @@ WP-bruteforce, plugin?
 
 WP password sync, timer?
 
-WP - remove default admin
+# WP - remove default admin - Gör det manuellt efter setup, notera i dokumentationen
+
+T0_Admins får inte skapa filer i SYSVOL?
 
 # Specifikt konto för AD-join - TB_Anna-karinko/T0-Stefanbo
 
@@ -56,18 +62,6 @@ WP - remove default admin
 # Scripta Ubuntu Pro i setup-scriptet
 
 # Säkerhetsgrej - Pre-create TB computers i OUt innan dom får gå med i domän, med TB_admin
-
-Teknisk dokumentation:
-    - Definiera hårdvara
-    - Nätverksarkitektur
-    - Definiera brandväggsregler
-    - GPO dokumentation
-    - Specifika Host-inställningar
-    - PSO+Default domain
-    (Mby dont explain shit)
-    - Förklara PAM
-    - Förklara nameswitching
-    - Förklara realmd och adsys
 
 Docs:
     - Case (Done)

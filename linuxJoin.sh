@@ -1,7 +1,6 @@
 #!/usr/bin/env bash
 
-# Usage: sudo bash -c "$(wget -qLO - https://raw.githubusercontent.com/mrmysko/exjobb/refs/heads/main/linuxJoin.sh)"
-
+# Usage: sudo bash -c "$(wget -qLO - https://raw.githubusercontent.com/mrmysko/exjobb/refs/heads/main/linuxJoin.sh)" -- -domain <domain>
 
 DOMAIN_USER="TB-Anna-karinko"
 INSTALL_SSH=false
@@ -19,27 +18,27 @@ show_usage() {
 # Parse command line arguments
 while [[ $# -gt 0 ]]; do
     case $1 in
-        -server)
-            INSTALL_SSH=true
-            DOMAIN_USER="T0-Stefanbo"
-            shift
-            ;;
-        -domain)
-            if [ -n "$2" ]; then
-                DOMAIN="$2"
-                shift 2
-            else
-                msg_error "Domain name is required for -domain parameter"
-                show_usage
-            fi
-            ;;
-        -h|--help)
+    -server)
+        INSTALL_SSH=true
+        DOMAIN_USER="T0-Stefanbo"
+        shift
+        ;;
+    -domain)
+        if [ -n "$2" ]; then
+            DOMAIN="$2"
+            shift 2
+        else
+            msg_error "Domain name is required for -domain parameter"
             show_usage
-            ;;
-        *)
-            msg_error "Unknown parameter: $1"
-            show_usage
-            ;;
+        fi
+        ;;
+    -h | --help)
+        show_usage
+        ;;
+    *)
+        msg_error "Unknown parameter: $1"
+        show_usage
+        ;;
     esac
 done
 
