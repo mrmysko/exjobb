@@ -141,7 +141,7 @@ try {
                     Department            = $user.department
                     City                  = $user.city
                     OfficePhone           = $user.phone
-                    Mail                  = $mail
+                    EmailAddress          = $mail
                     Enabled               = $true
                     ChangePasswordAtLogon = $true
                     AccountPassword       = (ConvertTo-SecureString -AsPlainText $password -Force)
