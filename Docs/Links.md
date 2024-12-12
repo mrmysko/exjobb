@@ -19,4 +19,3 @@
 [Polkit](https://wiki.archlinux.org/title/Polkit)
 
 [(WP-Plugin) Next Active Directory Integration](https://active-directory-wp.com/next-active-directory-integration/)
-[(WP-Plugin) Active Directory Integration / LDAP Integration](https://wordpress.org/plugins/ldap-login-for-intranet-sites/)
