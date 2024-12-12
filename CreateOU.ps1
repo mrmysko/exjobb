@@ -51,6 +51,26 @@ function Create-AdminGroup {
     }
 }
 
+function Add-ToDomainAdmins {
+    param(
+        [string]$GroupName
+    )
+    
+    try {
+        $isMember = Get-ADGroupMember -Identity "Domain Admins" | Where-Object { $_.Name -eq $GroupName }
+        if (-not $isMember) {
+            Add-ADGroupMember -Identity "Domain Admins" -Members $GroupName
+            Write-Host "Added $GroupName to Domain Admins group"
+        }
+        else {
+            Write-Host "$GroupName is already a member of Domain Admins group"
+        }
+    }
+    catch {
+        Write-Error ("Error adding {0} to Domain Admins - {1}" -f $GroupName, $_)
+    }
+}
+
 try {
     # Get the domain information
     $domain = Get-ADDomain
@@ -97,6 +117,11 @@ try {
         
         # Create tier admin group
         Create-AdminGroup -Name "T${i}_Admins" -Path "OU=Groups,$tierPath"
+        
+        # If this is Tier 0, add the admin group to Domain Admins
+        if ($i -eq 0) {
+            Add-ToDomainAdmins -GroupName "T0_Admins"
+        }
     }
     
     Write-Host "`nOU structure creation completed successfully!"
