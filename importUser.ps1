@@ -37,7 +37,8 @@ function Create-DepartmentGroup {
             Write-Host "Created Department Group: $groupName"
         }
         return $groupName
-    } catch {
+    }
+    catch {
         Write-Error "Error creating Department Group $groupName : $_"
         return $null
     }
@@ -77,18 +78,13 @@ try {
     $usersOUPath = "OU=Users,OU=Tier Base,$domainDN"
     $groupsOUPath = "OU=Groups,OU=Tier Base,$domainDN"
     
-    # Create output directory if it doesn't exist
-    $outputDir = Join-Path -Path $PSScriptRoot -ChildPath "output"
-    if (-not (Test-Path -Path $outputDir)) {
-        New-Item -ItemType Directory -Path $outputDir | Out-Null
-    }
-    
-    $outputPath = Join-Path -Path $outputDir -ChildPath "userpass.csv"
+    $outputPath = Join-Path -Path $PSScriptRoot -ChildPath "userpass.csv"
     
     try {
         Get-ADOrganizationalUnit $usersOUPath
         Get-ADOrganizationalUnit $groupsOUPath
-    } catch {
+    }
+    catch {
         Write-Error "Required OUs not found. Please run CreateOU.ps1 first."
         exit 1
     }
@@ -117,13 +113,21 @@ try {
         
         $displayName = "$($user.firstname) $($user.surname)"
         $samAccountName = $upnPrefix
+
+        if ($user.PSObject.Properties.Match('mail').Count -gt 0 -and $user.mail) {
+            $mail = $user.mail
+        }
+        else {
+            $mail = "$upnPrefix@$domainName"
+        }
         
         $existingUser = Get-ADUser -Filter "SamAccountName -eq '$samAccountName'" -ErrorAction SilentlyContinue
         
         if ($existingUser) {
             Write-Host "User $displayName already exists, updating group memberships..."
             $adUser = $existingUser
-        } else {
+        }
+        else {
             try {
                 $password = Generate-RandomPassword -Length 14
                 $newUserParams = @{
@@ -137,6 +141,7 @@ try {
                     Department            = $user.department
                     City                  = $user.city
                     OfficePhone           = $user.phone
+                    Mail                  = $mail
                     Enabled               = $true
                     ChangePasswordAtLogon = $true
                     AccountPassword       = (ConvertTo-SecureString -AsPlainText $password -Force)
@@ -146,13 +151,14 @@ try {
                 Write-Host "Created user: $displayName with UPN: $upn"
                 
                 $userPasswordList += [PSCustomObject]@{
-                    FirstName  = $user.firstname
-                    LastName   = $user.surname
-                    UserName   = $samAccountName
-                    Password   = $password
-                    UPN        = $upn
+                    FirstName = $user.firstname
+                    LastName  = $user.surname
+                    UserName  = $samAccountName
+                    Password  = $password
+                    UPN       = $upn
                 }
-            } catch {
+            }
+            catch {
                 Write-Error "Error creating user $displayName : $_"
                 continue
             }
@@ -164,22 +170,25 @@ try {
                 try {
                     Add-ADGroupMember -Identity $departmentGroups[$dept] -Members $adUser.SamAccountName -ErrorAction SilentlyContinue
                     Write-Host "Added $displayName to group $($departmentGroups[$dept])"
-                } catch {
+                }
+                catch {
                     Write-Error "Error adding $displayName to group $($departmentGroups[$dept]): $_"
                 }
             }
         }
     }
     
-    # Export the password list with explicit encoding and path
+    # Export the password list to the same directory as the script
     if ($userPasswordList.Count -gt 0) {
         $userPasswordList | Export-Csv -Path $outputPath -NoTypeInformation -Encoding UTF8
         Write-Host "User and password information has been saved to $outputPath"
-    } else {
+    }
+    else {
         Write-Warning "No new users were created, userpass.csv was not generated"
     }
     
     Write-Host "`nUser import and group assignments completed successfully!"
-} catch {
+}
+catch {
     Write-Error "An error occurred during user import: $_"
 }

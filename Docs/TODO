@@ -34,6 +34,8 @@ WP-bruteforce, plugin?
 
 WP password sync, timer?
 
+Routingregler, hur vet routern var trafik till port 80/443 ska?
+
 # WP - remove default admin - Gör det manuellt efter setup, notera i dokumentationen
 
 T0_Admins får inte skapa filer i SYSVOL? - går på annan klient
