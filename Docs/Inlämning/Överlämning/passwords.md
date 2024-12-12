@@ -1,5 +1,6 @@
 |Service|User|Password|
 |---|---|---|
+|DC SafeMode|Linux4Ever|
 |AD|DD\Administrator|Linux4Ever
 |SQL|Wordpress|Linux4Ever|
 |AD|WP-Read|Linux4Ever|
