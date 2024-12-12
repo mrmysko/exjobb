@@ -19,8 +19,6 @@ if ($DomainName -notmatch "\.") {
 # Set timezone to Stockholm
 Set-TimeZone -Id "W. Europe Standard Time"
 
-$SafeModeAdministratorPassword = $SafeModeAdministratorPassword | ConvertTo-SecureString -AsPlainText -Force
-
 # Install AD DS role
 Install-WindowsFeature AD-Domain-Services -IncludeManagementTools
 
@@ -87,7 +85,7 @@ $setupAction = New-ScheduledTaskAction -Execute 'Powershell.exe' -Argument "-NoP
 Register-ScheduledTask -TaskName "NewForestSetup" -Action $setupAction -User "SYSTEM" -RunLevel Highest -Trigger (New-ScheduledTaskTrigger -AtStartup)
 
 # Install new forest
-Install-ADDSForest -InstallDns -DomainName $DomainName -SafeModeAdministratorPassword $SafeModeAdministratorPassword -Confirm:$false -Force
+Install-ADDSForest -InstallDns -DomainName $DomainName -SafeModeAdministratorPassword (ConvertTo-SecureString -AsPlainText $SafeModeAdministratorPassword -Force) -Confirm:$false -Force
 
 # Sync time after ADDS Setup
 w32tm /config /syncfromflags:DOMHIER /update
