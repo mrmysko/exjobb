@@ -30,7 +30,7 @@ systemctl start mariadb.service
 systemctl enable mariadb.service
 
 msg_info "Configuring database"
-mysql -u root <<EOF
+mysql -u root -p${ROOT_PASSWORD} <<EOF
 -- Set root password
 ALTER USER 'root'@'localhost' IDENTIFIED BY '$ROOT_PASSWORD';
 

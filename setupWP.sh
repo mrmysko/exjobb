@@ -9,6 +9,7 @@ MYSQL_USER="wordpress"
 WP_ADMIN_USER="wp_admin"
 WP_ADMIN_PASS="Linux4Ever"
 WP_PATH="/var/www/wordpress"
+SITE_NAME="wp"
 
 msg_info() {
     echo "[INFO] $1"
@@ -47,7 +48,7 @@ chmod +x wp-cli.phar
 mv wp-cli.phar /usr/local/bin/wp
 
 wp --allow-root --path="${WP_PATH}" config create --dbhost="${MYSQL_DB_HOST}" --dbuser="${MYSQL_USER}" --dbpass="${WP_ADMIN_PASS}" --dbname="${MYSQL_DATABASE}"
-wp --allow-root --path="${WP_PATH}" core install --url="wordpress.${DOMAIN}" --admin_email="admin@${DOMAIN}" --title="Homepage" --admin_user="${WP_ADMIN_USER}" --admin_password="${WP_ADMIN_PASS}"
+wp --allow-root --path="${WP_PATH}" core install --url="${SITE_NAME}.${DOMAIN}" --admin_email="admin@${DOMAIN}" --title="Homepage" --admin_user="${WP_ADMIN_USER}" --admin_password="${WP_ADMIN_PASS}"
 wp --allow-root --path="${WP_PATH}" plugin install next-active-directory-integration
 wp --allow-root --path="${WP_PATH}" plugin activate next-active-directory-integration
 wp --allow-root --path="${WP_PATH}" plugin uninstall hello akismet
