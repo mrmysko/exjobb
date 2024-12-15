@@ -34,7 +34,7 @@ WP-bruteforce, plugin?
 
 WP password sync, timer?
 
-Routingregler, hur vet routern var trafik till port 80/443 ska?
+# Routingregler, hur vet routern var trafik till port 80/443 ska? - Forwarding
 
 # WP - remove default admin - Gör det manuellt efter setup, notera i dokumentationen
 
@@ -76,7 +76,6 @@ Docs:
 
 Wishlist:
 
-DHCP Failover
 Trusted CA certs
 Failover cluster
 Autoinstall
