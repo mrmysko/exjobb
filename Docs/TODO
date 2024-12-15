@@ -1,3 +1,16 @@
+Wishlist:
+
+Trusted CA certs - Kräver CA-server eller domän
+Failover cluster
+Autoinstall
+Kerberos SSH
+WP Kerberos sign-on - Paid
+GPO Import + Linking script
+Windows fileshare med automount och ACL på Linux
+Privileged RDP - Endast från specifika datorer
+Hyper-V VLAN Stuff
+Folder redirection. (Kräver filserver)
+
 # Setup SQL- och Wordpress-servrar
 
 # Hur ska servrarna administreras? Auto-install SSH? - Parameter i joinscript instllerar openssh + rdp
@@ -15,8 +28,6 @@ Aktivera vlan identification på vms nic (annat vlan än hyperv switch settings)
 # rpcbind - ports 49152-65535, 135
 
 # kbpasswd - port 464
-
-# About domain join - Administrator or pre-create
 
 # Definiera brandväggsregler
 
@@ -73,16 +84,3 @@ Docs:
     - Tidsrapport(Done)
     - Faktura(Done)
     - Antaganden
-
-Wishlist:
-
-Trusted CA certs
-Failover cluster
-Autoinstall
-Kerberos SSH
-WP Kerberos sign-on
-GPO Import + Linking script
-Windows fileshare med automount och ACL på Linux
-Privileged RDP - Endast från specifika datorer
-Hyper-V VLAN Stuff
-Folder redirection, alla kan jobba på olika datorer men ha kvar docs. (Kräver filserver)
