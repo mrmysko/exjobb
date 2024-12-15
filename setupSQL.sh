@@ -78,26 +78,20 @@ if ! mysqladmin ping &>/dev/null; then
     exit 1
 fi
 
-# Initial secure setup - on fresh install, root has no password
-msg_info "Configuring database"
-mysql <<EOF
--- Set root password and secure installation
-ALTER USER 'root'@'localhost' IDENTIFIED BY '$ROOT_PASSWORD';
-FLUSH PRIVILEGES;
+# Secure the MariaDB installation
+mysql_secure_installation <<EOF
+
+y
+$ROOT_PASSWORD
+$ROOT_PASSWORD
+y
+y
+y
+y
 EOF
 
-# Now use the root password for subsequent commands
+msg_info "Configuring database"
 mysql -u root -p"${ROOT_PASSWORD}" <<EOF
--- Remove anonymous users
-DELETE FROM mysql.user WHERE User='';
-
--- Disable remote root login
-DELETE FROM mysql.user WHERE User='root' AND Host NOT IN ('localhost', '127.0.0.1', '::1');
-
--- Remove test database
-DROP DATABASE IF EXISTS test;
-DELETE FROM mysql.db WHERE Db='test' OR Db='test\\_%';
-
 -- Create new database and user
 CREATE DATABASE IF NOT EXISTS \`$DB_NAME\` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 CREATE USER IF NOT EXISTS '$DB_USER'@'%' IDENTIFIED BY '$DB_PASSWORD';
