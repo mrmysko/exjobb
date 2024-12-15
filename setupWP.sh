@@ -18,7 +18,6 @@ msg_error() {
 cleanup() {
     if [ "$1" != "0" ]; then
         msg_error "An error occurred during installation. Cleaning up..."
-        [ -d "${WP_PATH}" ] && rm -rf "${WP_PATH}"
         [ -f "/etc/apache2/sites-available/wordpress.conf" ] && rm -f "/etc/apache2/sites-available/wordpress.conf"
         [ -d "/etc/apache2/certs" ] && rm -rf "/etc/apache2/certs"
     fi
@@ -65,17 +64,17 @@ WP_ADMIN_PASS="Linux4Ever"
 WP_ADMIN_USER="wp_admin"
 WP_PATH="/var/www/wordpress"
 
-# Check if WordPress directory already exists
-if [ -d "${WP_PATH}" ]; then
-    msg_error "WordPress directory already exists at ${WP_PATH}"
-    exit 1
-fi
-
 # Create backup directory
 BACKUP_DIR="/root/wp-setup-backup-$(date +%Y%m%d%H%M%S)"
 mkdir -p "$BACKUP_DIR"
 
-# Backup existing Apache configs
+# Backup existing WordPress and Apache configs
+if [ -d "${WP_PATH}" ]; then
+    msg_info "Backing up existing WordPress installation"
+    cp -r "${WP_PATH}" "${BACKUP_DIR}/"
+    rm -rf "${WP_PATH}"
+fi
+
 if [ -f "/etc/apache2/sites-available/000-default.conf" ]; then
     cp /etc/apache2/sites-available/000-default.conf "$BACKUP_DIR/"
 fi
