@@ -19,3 +19,5 @@
 [Polkit](https://wiki.archlinux.org/title/Polkit)
 
 [(WP-Plugin) Next Active Directory Integration](https://active-directory-wp.com/next-active-directory-integration/)
+
+[Installing WordPress on Apache the modern way](https://jrs-s.net/2019/05/25/installing-wordpress-on-apache-the-modern-way/)
